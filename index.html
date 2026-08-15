@@ -3,103 +3,332 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora de Preços — Loja da Vivi</title>
+  <title>Calculadora de Marketplaces - Loja da Vivi</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 0; background: #f5f5f5; color: #1a1a1a; }
+    :root {
+      --bg: #f3f3f3; --surface: #ffffff; --text: #1a1a1a; --muted: #6b6b6b;
+      --border: #e0e0e0; --accent: #0f6cbd; --accent-hover: #0a5a9e;
+      --danger: #c42b1c; --ok: #107c10;
+    }
+    .dark-mode {
+      --bg: #1b1b1b; --surface: #2b2b2b; --text: #f3f3f3; --muted: #a0a0a0;
+      --border: #3d3d3d; --accent: #4cc2ff; --accent-hover: #7ad0ff;
+      --danger: #ff6b5e; --ok: #6ccb5f;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: "Segoe UI", system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
     .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
-    h1 { font-size: 1.5rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
-    label { display: flex; flex-direction: column; font-size: .85rem; gap: 4px; }
-    input, select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
-    .modes { display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
-    .modes label { flex-direction: row; align-items: center; gap: 6px; }
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
-    th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; font-size: .9rem; }
-    th { background: #1a1a1a; color: #fff; }
-    tr:nth-child(even) { background: #fafafa; }
-    .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* Login */
+    .login-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 50; }
+    .login-overlay[hidden] { display: none; }
+    .login-card { background: var(--surface); padding: 28px; border-radius: 8px; width: 320px; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+    .login-card h2 { margin: 0 0 4px; font-size: 1.3rem; }
+    .login-kicker { color: var(--accent); font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; margin: 0 0 8px; }
+    .login-description { color: var(--muted); font-size: .85rem; margin: 0 0 16px; }
+    .field { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; margin-bottom: 12px; }
+    .field input, .field select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-size: .95rem; }
+    .login-remember { display: flex; align-items: center; gap: 6px; font-size: .82rem; margin-bottom: 14px; }
+    .login-error { color: var(--danger); font-size: .82rem; min-height: 18px; margin: 0 0 10px; }
+    .btn { padding: 8px 16px; border: none; border-radius: 4px; font-size: .9rem; cursor: pointer; }
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+
+    /* Header */
+    .app-header { border-bottom: 1px solid var(--border); padding: 20px 0 16px; }
+    .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-size: .72rem; margin: 0; }
+    .app-header h1 { margin: 4px 0 2px; font-size: 1.6rem; }
+    .subtitle { color: var(--muted); margin: 0; font-size: .9rem; }
+    .header-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+    /* Panels */
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-top: 20px; }
+    .panel h2 { margin: 0 0 12px; font-size: 1.1rem; }
+    details { color: var(--muted); font-size: .85rem; margin-bottom: 16px; }
+    details ol { margin: 8px 0 0; padding-left: 20px; }
+    .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+    .money-input-wrap { display: flex; align-items: center; gap: 4px; }
+    .money-input-wrap span { color: var(--muted); }
+    .calc-feedback { font-size: .85rem; color: var(--muted); margin: 14px 0 0; min-height: 18px; }
+    .calc-feedback[data-state="success"] { color: var(--ok); }
+    .calc-feedback[data-state="error"] { color: var(--danger); }
+
+    /* Mode cards */
+    .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .mode-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--surface); }
+    .mode-card.is-active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .mode-card h3 { margin: 0 0 6px; font-size: 1rem; }
+    .mode-card p { color: var(--muted); font-size: .82rem; margin: 0 0 12px; }
+    .inline-field .field { flex-direction: row; align-items: center; }
+
+    /* Table */
+    .results-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .results-table th, .results-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; font-size: .88rem; }
+    .results-table thead th { background: var(--surface); color: var(--text); font-weight: 600; }
+    .results-table .marketplace-cell { font-weight: 600; }
+    .results-table .result-cell { text-align: right; font-variant-numeric: tabular-nums; }
+    .table-wrap { overflow-x: auto; }
+
+    /* Footer */
+    .app-footer { border-top: 1px solid var(--border); margin-top: 24px; padding: 16px 0; color: var(--muted); font-size: .82rem; }
+    .footer-kicker { text-transform: uppercase; letter-spacing: 1px; font-size: .7rem; margin: 0; color: var(--accent); }
+    .footer-title { margin: 2px 0; font-weight: 600; }
+    .footer-text { margin: 0; }
   </style>
 </head>
 <body>
+  <!-- Login -->
+  <div id="login-overlay" class="login-overlay" hidden>
+    <form id="login-form" class="login-card">
+      <p class="login-kicker">Acesso restrito</p>
+      <h2>Entrar na calculadora</h2>
+      <p class="login-description">Informe seu login e senha.</p>
+      <label class="field">Login
+        <input id="login-user" type="text" autocomplete="username" required>
+      </label>
+      <label class="field">Senha
+        <input id="login-password" type="password" autocomplete="current-password" required>
+      </label>
+      <label class="login-remember"><input id="login-remember" type="checkbox"> Não pedir mais neste navegador</label>
+      <p id="login-error" class="login-error"></p>
+      <button type="submit" class="btn btn-primary">Entrar</button>
+    </form>
+  </div>
+
   <div class="wrap">
-    <h1>Calculadora de Preços — Loja da Vivi</h1>
-    <div class="grid">
-      <label>CNPJ
-        <select id="cnpj">
-          <option>LOJA DA VIVI LTDA</option>
-          <option>FERREIRA PROSPERITA COSMETICOS LTDA</option>
-          <option>RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA</option>
-          <option>VIVIANE CHRISTINA FERREIRA</option>
-        </select>
-      </label>
-      <label>Peso (kg)
-        <input id="peso" type="number" step="0.1" value="1" placeholder="ex: 2.5">
-      </label>
-      <label>Custo (R$)
-        <input id="custo" type="number" step="0.01" value="50" placeholder="0,00">
-      </label>
-      <label>Nível (1–5)
-        <select id="nivel">
-          <option value="5">5</option><option value="4">4</option>
-          <option value="3">3</option><option value="2">2</option><option value="1">1</option>
-        </select>
-      </label>
-      <label>Plano Mercado Livre
-        <select id="plano"><option value="classico">Clássico</option><option value="premium">Premium</option></select>
-      </label>
-    </div>
+    <header class="app-header">
+      <p class="eyebrow">Subsistema interno</p>
+      <h1>Calculadora da Loja da Vivi</h1>
+      <p class="subtitle">Preços consistentes para todos os marketplaces.</p>
+      <div class="header-actions">
+        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">Tema escuro</button>
+        <button id="clear-calculation" class="btn btn-ghost" type="button">Limpar cálculo</button>
+        <button id="logout-button" class="btn btn-ghost" type="button" hidden>Sair</button>
+      </div>
+    </header>
 
-    <div class="modes">
-      <label><input type="radio" name="modo" value="manual" checked> Manual (R$)</label>
-      <label><input type="radio" name="modo" value="valorLiq"> Valor líquido (R$)</label>
-      <label><input type="radio" name="modo" value="pctLiq"> Percentual (%)</label>
-      <label>Valor <input id="valor" type="number" step="0.01" value="100"></label>
-    </div>
+    <main>
+      <section class="panel">
+        <h2>Parâmetros da operação</h2>
+        <details open>
+          <summary>Como usar em 4 passos</summary>
+          <ol>
+            <li>Selecione o CNPJ e o peso.</li>
+            <li>Informe o custo do produto.</li>
+            <li>Preencha apenas um modo de cálculo.</li>
+            <li>Confira os resultados por marketplace.</li>
+          </ol>
+        </details>
+        <div class="controls-grid">
+          <label class="field">CNPJ
+            <select id="cnpj">
+              <option value="Selecione">Selecione...</option>
+              <option>LOJA DA VIVI LTDA</option>
+              <option>FERREIRA PROSPERITA COSMETICOS LTDA</option>
+              <option>RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA</option>
+              <option>VIVIANE CHRISTINA FERREIRA</option>
+            </select>
+          </label>
+          <label class="field">Peso
+            <select id="peso">
+              <option value="Selecione">Selecione...</option>
+              <option value="0.3">até 0.3kg</option>
+              <option value="0.5">0.3 a 0.5kg</option>
+              <option value="1">0.5 a 1kg</option>
+              <option value="2">1 a 2kg</option>
+              <option value="5">2 a 5kg</option>
+              <option value="9">5 a 9kg</option>
+              <option value="13">9 a 13kg</option>
+              <option value="17">13 a 17kg</option>
+              <option value="23">17 a 23kg</option>
+              <option value="30">23 a 30kg</option>
+            </select>
+          </label>
+          <label class="field">Custo
+            <div class="money-input-wrap"><span>R$</span>
+              <input id="custo" placeholder="0,00" inputmode="decimal">
+            </div>
+          </label>
+          <label class="field">Nível
+            <select id="nivel">
+              <option value="5">5</option><option value="4">4</option>
+              <option value="3">3</option><option value="2">2</option><option value="1">1</option>
+            </select>
+          </label>
+        </div>
+        <p id="calc-feedback" class="calc-feedback">Preencha os campos para iniciar.</p>
+      </section>
 
-    <table id="tabela">
-      <thead>
-        <tr><th>Canal</th><th class="num">Resultado</th><th class="num">Frete</th><th class="num">Taxa</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+      <section class="panel">
+        <h2>Modos de cálculo</h2>
+        <div class="mode-grid">
+          <article class="mode-card" data-mode="manual">
+            <h3>Manual</h3>
+            <p>Informe o preço de venda para ver o líquido aproximado.</p>
+            <label class="field inline-field"><div class="money-input-wrap"><span>R$</span>
+              <input id="Manual" type="number" inputmode="decimal" placeholder="0,00"></div>
+            </label>
+          </article>
+          <article class="mode-card" data-mode="valorliquido">
+            <h3>Valor líquido</h3>
+            <p>Informe quanto quer receber para obter o preço de venda.</p>
+            <label class="field inline-field"><div class="money-input-wrap"><span>R$</span>
+              <input id="ValorLiq" type="number" inputmode="decimal" placeholder="0,00"></div>
+            </label>
+          </article>
+          <article class="mode-card" data-mode="percentual">
+            <h3>Percentual líquido</h3>
+            <p>Informe a margem em percentual para receber o preço sugerido.</p>
+            <label class="field inline-field"><div class="money-input-wrap">
+              <input id="PctLiq" type="number" inputmode="decimal" placeholder="0"><span>%</span></div>
+            </label>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Resultados por marketplace</h2>
+        <p style="color:var(--muted);font-size:.85rem;margin:0 0 4px;">Comparativo completo por canal com os 3 modos de cálculo ativos.</p>
+        <div class="table-wrap">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Marketplace</th>
+                <th>Líquido aprox. no modo Manual</th>
+                <th>Sugestão de venda no modo Valor líquido</th>
+                <th>Sugestão de venda no modo Percentual líquido</th>
+              </tr>
+            </thead>
+            <tbody id="result-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p class="footer-kicker">Subsistemas Loja da Vivi</p>
+      <p class="footer-title">Calculadora de Marketplaces</p>
+      <p class="footer-text">Operação diária com foco em consistência de preço e agilidade.</p>
+    </footer>
   </div>
 
   <script src="config.js"></script>
   <script src="calculadora.js"></script>
   <script>
-    const rotulos = {
-      presencial: "Presencial", amazon: "Amazon", casasBahia: "Casas Bahia",
-      magalu: "Magalu", mercadoLivre: "Mercado Livre", olist: "Olist",
-      rd: "RD", shein: "Shein", shopee: "Shopee", temu: "Temu", tiktok: "TikTok",
-    };
+    // ---------- Login ----------
+    const AUTH = [
+      { user: "renato", pass: "otaner" },
+      { user: "viviane", pass: "0212" },
+    ];
+    const loginForm = document.getElementById("login-form");
+    const loginError = document.getElementById("login-error");
+    const overlay = document.getElementById("login-overlay");
+    const logoutBtn = document.getElementById("logout-button");
+    const rememberKey = "calcRemembered";
 
+    function unlock(remember) {
+      overlay.hidden = true;
+      logoutBtn.hidden = false;
+      if (remember) localStorage.setItem(rememberKey, "1");
+    }
+    function lock() {
+      overlay.hidden = false;
+      logoutBtn.hidden = true;
+      localStorage.removeItem(rememberKey);
+    }
+    if (localStorage.getItem(rememberKey) === "1") { overlay.hidden = true; logoutBtn.hidden = false; }
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const u = document.getElementById("login-user").value.trim();
+      const p = document.getElementById("login-password").value;
+      const ok = AUTH.some((a) => a.user === u && a.pass === p);
+      if (!ok) { loginError.textContent = "Login ou senha inválidos."; return; }
+      loginError.textContent = "";
+      unlock(document.getElementById("login-remember").checked);
+    });
+    logoutBtn.addEventListener("click", lock);
+
+    // ---------- Tema ----------
+    const themeBtn = document.getElementById("toggle-dark-mode");
+    function applyTheme() {
+      const dark = document.documentElement.classList.toggle("dark-mode");
+      themeBtn.textContent = dark ? "Tema claro" : "Tema escuro";
+      localStorage.setItem("darkMode", dark ? "1" : "0");
+    }
+    if (localStorage.getItem("darkMode") === "1") document.documentElement.classList.add("dark-mode");
+    themeBtn.textContent = document.documentElement.classList.contains("dark-mode") ? "Tema claro" : "Tema escuro";
+    themeBtn.addEventListener("click", applyTheme);
+
+    // ---------- Marketplaces ----------
+    const CANAIS_UI = [
+      ["presencial", "PRESENCIAL"], ["amazon", "AMAZON"], ["casasBahia", "CASAS BAHIA"],
+      ["magalu", "MAGALU"], ["mercadoLivre", "MERCADO LIVRE"], ["olist", "OLIST"],
+      ["rd", "RD"], ["shein", "SHEIN"], ["shopee", "SHOPEE"],
+      ["temu", "TEMU"], ["tiktok", "TIKTOK"],
+    ];
+
+    function parseNum(v) {
+      if (typeof v === "number") return v;
+      let s = String(v || "").trim().replace(/[^\d.,-]/g, "");
+      if (s.includes(".") && s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+      else if (s.includes(",")) s = s.replace(",", ".");
+      return parseFloat(s) || 0;
+    }
+    function fmt(v) { return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
+
+    // ---------- Cálculo ----------
     function calcular() {
-      const modo = document.querySelector("input[name=modo]:checked").value;
-      const valor = parseFloat(document.getElementById("valor").value) || 0;
-      const res = calcularPreco({
-        custo: parseFloat(document.getElementById("custo").value) || 0,
-        cnpj: document.getElementById("cnpj").value,
-        nivel: parseInt(document.getElementById("nivel").value),
-        pesoKg: parseFloat(document.getElementById("peso").value) || 0,
-        plano: document.getElementById("plano").value,
-        modo, valorManual: valor, valorLiq: valor, pctLiq: valor,
-      });
+      const cnpj = document.getElementById("cnpj").value;
+      const pesoKg = parseNum(document.getElementById("peso").value);
+      const custo = parseNum(document.getElementById("custo").value);
+      const nivel = parseInt(document.getElementById("nivel").value) || 5;
+      const Manual = parseNum(document.getElementById("Manual").value);
+      const ValorLiq = parseNum(document.getElementById("ValorLiq").value);
+      const PctLiq = parseNum(document.getElementById("PctLiq").value);
+      const feedback = document.getElementById("calc-feedback");
 
-      const tbody = document.querySelector("#tabela tbody");
+      if (cnpj === "Selecione") { feedback.dataset.state = "error"; feedback.textContent = "Selecione o CNPJ para iniciar."; return; }
+      if (pesoKg <= 0) { feedback.dataset.state = "error"; feedback.textContent = "Selecione a faixa de peso do produto."; return; }
+      if (!(custo > 0)) { feedback.dataset.state = "error"; feedback.textContent = "Informe um custo maior que zero."; return; }
+      if (!(Manual > 0 || ValorLiq > 0 || PctLiq > 0)) { feedback.dataset.state = "error"; feedback.textContent = "Preencha ao menos um modo de cálculo."; return; }
+
+      const tbody = document.getElementById("result-body");
       tbody.innerHTML = "";
-      Object.entries(res).forEach(([canal, r]) => {
+      CANAIS_UI.forEach(([canal, rotulo]) => {
+        const res = calcularPreco({
+          custo, cnpj, nivel, pesoKg, plano: "classico",
+          modo: "manual", valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq,
+        });
+        const r = res[canal];
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${rotulos[canal] || canal}</td>
-          <td class="num">${formatarMoeda(r.valor)}</td>
-          <td class="num">${formatarMoeda(r.frete)}</td>
-          <td class="num">${formatarMoeda(r.taxa)}</td>`;
+        const manual = Manual > 0 ? fmt(r.valor) : "—";
+        const vl = ValorLiq > 0 ? fmt(r.valor) : "—";
+        const pct = PctLiq > 0 ? fmt(r.valor) : "—";
+        tr.innerHTML = `<th class="marketplace-cell">${rotulo}</th>
+          <td class="result-cell">${manual}</td>
+          <td class="result-cell">${vl}</td>
+          <td class="result-cell">${pct}</td>`;
         tbody.appendChild(tr);
       });
+      feedback.dataset.state = "success";
+      feedback.textContent = "Cálculo pronto. Resultados atualizados automaticamente.";
     }
 
-    document.querySelectorAll("input, select").forEach((el) =>
-      el.addEventListener("input", calcular));
-    calcular();
+    // ---------- Eventos ----------
+    ["cnpj", "peso", "custo", "nivel", "Manual", "ValorLiq", "PctLiq"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener(id === "nivel" || id === "cnpj" || id === "peso" ? "change" : "input", calcular);
+    });
+    document.getElementById("clear-calculation").addEventListener("click", () => {
+      ["custo", "Manual", "ValorLiq", "PctLiq"].forEach((id) => document.getElementById(id).value = "");
+      document.getElementById("cnpj").value = "Selecione";
+      document.getElementById("peso").value = "Selecione";
+      document.getElementById("nivel").value = "5";
+      document.getElementById("result-body").innerHTML = "";
+      document.getElementById("calc-feedback").dataset.state = "";
+      document.getElementById("calc-feedback").textContent = "Campos limpos. Preencha novamente para calcular.";
+    });
   </script>
 </body>
 </html>
