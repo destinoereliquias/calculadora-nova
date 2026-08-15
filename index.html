@@ -19,7 +19,7 @@
     }
     * { box-sizing: border-box; }
     body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
-    .wrap { max-width: 1150px; margin: 0 auto; padding: 24px; }
+    .wrap { max-width: 1150px; margin: 0 auto; padding: 24px; padding-bottom: 90px; }
 
     /* Header */
     .app-header { background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 16px; padding: 32px; color: #fff; position: relative; overflow: hidden; }
@@ -27,7 +27,9 @@
     .eyebrow { text-transform: uppercase; letter-spacing: 2px; font-size: .72rem; opacity: .85; margin: 0; }
     .app-header h1 { margin: 6px 0 4px; font-size: 1.8rem; font-weight: 700; }
     .subtitle { margin: 0; opacity: .9; font-size: .95rem; }
-    .header-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; position: relative; z-index: 2; }
+    .updated-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3); padding: 6px 12px; border-radius: 999px; font-size: .78rem; font-weight: 600; backdrop-filter: blur(4px); }
+    .updated-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,.3); }
+    .header-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; position: relative; z-index: 2; }
     .btn { padding: 9px 16px; border: none; border-radius: 10px; font-size: .88rem; cursor: pointer; font-weight: 600; transition: transform .15s, box-shadow .15s; }
     .btn:hover { transform: translateY(-1px); }
     .btn-ghost { background: rgba(255,255,255,.2); color: #fff; backdrop-filter: blur(4px); }
@@ -74,10 +76,42 @@
     .results-table .result-cell { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
 
     /* Footer */
-    .app-footer { margin-top: 28px; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; color: var(--muted); font-size: .82rem; text-align: center; }
+    .app-footer { margin-top: 28px; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; color: var(--muted); font-size: .82rem; text-align: center; margin-bottom: 70px; }
     .footer-kicker { text-transform: uppercase; letter-spacing: 2px; font-size: .68rem; margin: 0; color: var(--primary); font-weight: 600; }
     .footer-title { margin: 4px 0; font-weight: 700; color: var(--text); }
     .footer-text { margin: 0; }
+
+    /* Navegação inferior */
+    .nav-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      z-index: 40;
+      box-shadow: 0 -2px 10px rgba(0,0,0,.05);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 14px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font-size: .72rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s, color .15s;
+    }
+    .nav-item:hover { background: var(--primary-light); color: var(--primary); }
+    .nav-item.is-active { color: var(--primary); font-weight: 600; }
+    .nav-item .nav-icon { font-size: 1.1rem; }
   </style>
 </head>
 <body>
@@ -86,6 +120,10 @@
       <p class="eyebrow">✦ Subsistema interno</p>
       <h1>Calculadora da Loja da Vivi</h1>
       <p class="subtitle">Preços consistentes para todos os marketplaces.</p>
+      <span class="updated-badge" id="updated-badge">
+        <span class="dot"></span>
+        <span id="updated-text">Buscando última atualização...</span>
+      </span>
       <div class="header-actions">
         <button id="toggle-dark-mode" class="btn btn-ghost" type="button">🌙 Tema escuro</button>
         <button id="clear-calculation" class="btn btn-ghost" type="button">↺ Limpar cálculo</button>
@@ -199,9 +237,45 @@
     </footer>
   </div>
 
+  <!-- Navegação inferior -->
+  <nav class="nav-bar">
+    <a class="nav-item is-active" href="index.html">
+      <span class="nav-icon">🛒</span> Marketplace
+    </a>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">💰</span> Caixa
+    </a>
+    <a class="nav-item" href="precos.html">
+      <span class="nav-icon">🏷️</span> Etiqueta
+    </a>
+    <a class="nav-item" href="precos.html">
+      <span class="nav-icon">📄</span> DANFE
+    </a>
+  </nav>
+
   <script src="config.js"></script>
   <script src="calculadora.js"></script>
   <script>
+    // ---------- Última atualização (data/hora do último commit) ----------
+    // Busca a data do último commit no GitHub. Como o repositório é público,
+    // a API retorna a data sem precisar de senha. Atualiza sozinho.
+    (function () {
+      const textEl = document.getElementById("updated-text");
+      fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1")
+        .then((r) => r.json())
+        .then((data) => {
+          const commit = Array.isArray(data) ? data[0] : null;
+          if (!commit || !commit.commit) throw new Error("sem dados");
+          const d = new Date(commit.commit.committer.date);
+          const dataStr = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+          const horaStr = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+          textEl.textContent = "Última atualização: " + dataStr + " às " + horaStr;
+        })
+        .catch(() => {
+          textEl.textContent = "Última atualização: indisponível";
+        });
+    })();
+
     // ---------- Tema ----------
     const themeBtn = document.getElementById("toggle-dark-mode");
     function applyTheme() {
