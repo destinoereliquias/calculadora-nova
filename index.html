@@ -6,7 +6,7 @@
 <title>Calculadora de Marketplaces - Loja da Vivi</title>
 <style>
 :root{--bg:#fdf2f8;--surface:#fff;--text:#4a1d33;--muted:#a06b87;--border:#f8d7e8;--primary:#db2777;--primary-dark:#be185d;--primary-light:#fce7f3;--accent:#f472b6;--ok:#10b981;--danger:#ef4444;--shadow:0 4px 20px rgba(219,39,119,.10)}
-.dark-mode{--bg:#160b12;--surface:#231220;--text:#f3e3ec;--muted:#b489a0;--border:#3a2230;--primary:#f472b6;--primary-dark:#ec4899;--primary-light:#3a2230;--accent:#f9a8d4;--ok:#34d399;--danger:#f87171;--shadow:0 4px 20px rgba(0,0,0,.4)}
+.dark-mode{--bg:#1c2330;--surface:#232b39;--text:#eef1f6;--muted:#9aa7bd;--border:#323e52;--primary:#f472b6;--primary-dark:#ec4899;--primary-light:#3a2b45;--accent:#f9a8d4;--ok:#34d399;--danger:#f87171;--shadow:0 4px 20px rgba(0,0,0,.4)}
 *{box-sizing:border-box}
 body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
 .wrap{max-width:1150px;margin:0 auto;padding:24px;padding-bottom:90px}
@@ -44,17 +44,30 @@ details ol{margin:8px 0 0;padding-left:20px}
 .mode-card p{color:var(--muted);font-size:.82rem;margin:0 0 14px}
 .mode-badge{width:8px;height:8px;border-radius:50%;display:inline-block}
 .mode-badge.manual{background:var(--primary)}
-.mode-badge.vl{background:var(--accent)}
-.mode-badge.pct{background:var(--ok)}
+.mode-badge.vl{background:var(--ok)}
+.mode-badge.pct{background:#f59e0b}
+
+/* Pills de modo (iguais ao modelo) */
+.mode-pills{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.mode-pill{padding:7px 16px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:.8rem;font-weight:600;transition:all .15s}
+.mode-pill.on-manual{background:#fff;border-color:#fff;color:#333;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.mode-pill.on-vl{background:#10b981;border-color:#10b981;color:#fff}
+.mode-pill.on-pct{background:#f59e0b;border-color:#f59e0b;color:#fff}
+.dark-mode .mode-pill.on-manual{background:#eef1f6;border-color:#eef1f6;color:#1c2330}
+
+/* Tabela alinhada em grade */
 .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
-.results-table{width:100%;border-collapse:collapse}
-.results-table th,.results-table td{padding:12px 14px;text-align:left;font-size:.88rem}
-.results-table thead th{background:var(--bg);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.5px;border-bottom:1px solid var(--border)}
-.results-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+.results-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.results-table th,.results-table td{padding:11px 14px;font-size:.88rem;overflow:hidden;text-overflow:ellipsis}
+.results-table thead th{background:var(--bg);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.5px;border-bottom:1px solid var(--border);text-align:center;padding-top:13px;padding-bottom:13px}
+.results-table thead th:first-child{text-align:left}
+.results-table tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
 .results-table tbody tr:last-child{border-bottom:none}
 .results-table tbody tr:hover{background:var(--primary-light)}
-.results-table .marketplace-cell{font-weight:600}
-.results-table .result-cell{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.results-table .marketplace-cell{font-weight:600;text-align:left;white-space:nowrap}
+.results-table .result-cell{text-align:right;font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
+.results-table tbody td:nth-child(2),.results-table tbody td:nth-child(3),.results-table tbody td:nth-child(4){width:26.5%}
+.results-table tbody td:nth-child(1){width:20.5%}
 .app-footer{margin-top:28px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:.82rem;text-align:center;margin-bottom:70px}
 .footer-kicker{text-transform:uppercase;letter-spacing:2px;font-size:.68rem;margin:0;color:var(--primary);font-weight:600}
 .footer-title{margin:4px 0;font-weight:700;color:var(--text)}
@@ -157,7 +170,12 @@ details ol{margin:8px 0 0;padding-left:20px}
 
     <section class="panel">
       <h2>Resultados por marketplace</h2>
-      <p class="panel-sub">Comparativo completo por canal com os 3 modos de calculo ativos. A tabela fica sempre visivel.</p>
+      <p class="panel-sub">Comparativo completo por canal com os 3 modos de calculo ativos.</p>
+      <div class="mode-pills">
+        <span class="mode-pill" id="pill-manual">Manual</span>
+        <span class="mode-pill" id="pill-vl">Valor liquido</span>
+        <span class="mode-pill" id="pill-pct">Percentual liquido</span>
+      </div>
       <div class="table-wrap">
         <table class="results-table">
           <thead>
@@ -420,8 +438,19 @@ function parseNum(v) {
 }
 function fmt(v) { return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
 
+// Atualiza o destaque das pílulas conforme os modos preenchidos
+function atualizarPills() {
+  var m = parseNum(document.getElementById("Manual").value) > 0;
+  var v = parseNum(document.getElementById("ValorLiq").value) > 0;
+  var p = parseNum(document.getElementById("PctLiq").value) > 0;
+  document.getElementById("pill-manual").className = "mode-pill" + (m ? " on-manual" : "");
+  document.getElementById("pill-vl").className = "mode-pill" + (v ? " on-vl" : "");
+  document.getElementById("pill-pct").className = "mode-pill" + (p ? " on-pct" : "");
+}
+
 function calcular() {
   var fb = document.getElementById("calc-feedback");
+  atualizarPills();
   try {
     var cnpj = document.getElementById("cnpj").value;
     var pesoKg = parseNum(document.getElementById("peso").value);
@@ -465,10 +494,12 @@ document.getElementById("clear-calculation").addEventListener("click", function 
   document.getElementById("peso").value = "Selecione";
   document.getElementById("nivel").value = "5";
   montarTabela();
+  atualizarPills();
   var fb = document.getElementById("calc-feedback");
   fb.dataset.state = "";
   fb.textContent = "Campos limpos. Preencha novamente para calcular.";
 });
+atualizarPills();
 </script>
 </body>
 </html>
