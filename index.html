@@ -52,8 +52,6 @@ details ol{margin:8px 0 0;padding-left:20px}
 .mode-pill.on-vl{background:#10b981;border-color:#10b981;color:#fff}
 .mode-pill.on-pct{background:#f59e0b;border-color:#f59e0b;color:#fff}
 .dark-mode .mode-pill.on-manual{background:#eef1f6;border-color:#eef1f6;color:#1c2330}
-
-/* TABELA EM GRADE - cada celula com borda visivel (quadradinhos) */
 .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
 .results-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .results-table th,.results-table td{padding:10px 12px;font-size:.88rem;border:1px solid var(--border);text-align:center;overflow:hidden;text-overflow:ellipsis}
@@ -203,22 +201,90 @@ details ol{margin:8px 0 0;padding-left:20px}
 
 <script>
 /* ============================================================
-   1) CONFIG - TODAS AS TAXAS, COMISSOES E FRETES
+   1) CONFIG - VALORES DA PLANILHA PUBLICA (calculadora antiga)
+   Ordem das faixas de peso (fretes ACIMA79):
+   [ate300G, 300a500G, 500Ga1KG, 1a2KG, 2a5KG, 5a9KG, 9a13KG, 13a17KG, 17a23KG, 23a30KG]
    ============================================================ */
-var MARGEM_PADRAO = 30;
-var NIVEL_DESCONTO = { 5: 0.85, 4: 0.90, 3: 0.95, 2: 1.00, 1: 1.05 };
-var CNPJ_ALIQUOTAS = {
-  "LOJA DA VIVI LTDA": 12,
-  "FERREIRA PROSPERITA COSMETICOS LTDA": 12,
-  "RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA": 10,
-  "VIVIANE CHRISTINA FERREIRA": 12
+var CONFIG = {
+  aliq: {
+    "LOJA DA VIVI LTDA": 0.10,
+    "FERREIRA PROSPERITA COSMETICOS LTDA": 0.11,
+    "RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA": 0.10,
+    "VIVIANE CHRISTINA FERREIRA": 0.04
+  },
+  insumos: { ate300G: 1, acima300G: 2 },
+  usarInsumos: false,
+  canais: {
+    presencial: {
+      comissao: 0.0329, comissaoRAV: 0.0329, taxa: 0,
+      freteATE: null, freteACIMA: [0,0,0,0,0,0,0,0,0,0],
+      niveis: {1:1,2:1,3:1,4:1,5:1}
+    },
+    amazon: {
+      comissao: 0.145, taxa: 0,
+      freteATE: { ate30: 4.5, ate50: 6.5, ate79: 6.75 },
+      freteACIMA: [17.95, 19.3, 20.2, 21.1, 25.6, 41, 69.5, 83.5, 104.5, 129],
+      niveis: {1:1,2:1,3:1,4:1,5:1}
+    },
+    casasBahia: {
+      comissao: 0.21, taxa: 0,
+      freteATE: { ate69: 0 },
+      freteACIMA: [29, 29, 32, 34, 42, 67.9, 91.9, 104.9, 112.9, 119.9],
+      niveis: {1:1,2:1,3:1,4:0.6,5:0.5}
+    },
+    magalu: {
+      comissao: 0.18, taxa: { ate10: 0, acima10: 2 },
+      freteATE: { ate79: 0 },
+      freteACIMA: [29.9, 29.9, 35.9, 38.9, 46.9, 68.9, 89.9, 102.9, 125.9, 139.9],
+      niveis: {1:1,2:1,3:0.75,4:0.6,5:0.5}
+    },
+    mercadoLivre: {
+      comissao: { classico: 0.14, premium: 0.19 },
+      taxa: { ate12pct: 0.005, ate29: 6.25, ate50: 6.5, ate79: 6.75, acima79: 0 },
+      frete: "TABELA_NOVA",
+      niveis: {1:1,2:1,3:1,4:1,5:0.5}
+    },
+    olist: {
+      comissao: 0.21, taxa: 5,
+      freteATE: { ate79: 0 },
+      freteACIMA: [37.9, 38.9, 42.9, 44.9, 52.9, 81.9, 127.9, 142.9, 166.9, 191.9],
+      niveis: {1:0.8,2:0.8,3:0.6,4:0.5,5:0.5}
+    },
+    rd: {
+      comissao: 0.19, taxa: 0,
+      freteATE: null,
+      freteACIMA: [40.9, 41.9, 43.9, 46.9, 51.9, 83.9, 131.9, 146.9, 171.9, 197.9],
+      niveis: {1:1,2:1,3:1,4:1,5:1}
+    },
+    shein: {
+      comissao: 0.16, taxa: 0,
+      freteATE: { ate49: 12 },
+      freteACIMA: [9, 9.5, 11, 12, 15, 32, 63, 85, 95, 106],
+      niveis: {1:1,2:1,3:1,4:1,5:1}
+    },
+    shopee: {
+      comissao: { ate79: 0.20, acima79: 0.14 },
+      taxa: { ate79: 4, ate99: 16, ate199: 20, acima200: 26 },
+      frete: 0, niveis: {1:1,2:1,3:1,4:1,5:1}
+    },
+    temu: {
+      comissao: 0, taxa: 0, frete: 0, niveis: {1:1,2:1,3:1,4:1,5:1}
+    },
+    tiktok: {
+      comissao: { ate50: 0.10, acima50: 0.06 },
+      taxa: { ate50: 4, acima50: 6 },
+      frete: 0, niveis: {1:1,2:1,3:1,4:1,5:1}
+    }
+  }
 };
-var PRESENCIAL = { comissao: 0, taxaFixa: 0, frete: 0 };
-var AMAZON = { comissao: 15, frete: { ate30: 15, ate50: 12, ate79: 8, acima79: 5 } };
-var CASAS_BAHIA = { comissao: 10, taxaFixa: 2, frete: { ate69: 20, acima69: 0 } };
-var MAGALU = { comissao: 12, taxaFixa: { ate10: 3, acima10: 5 }, frete: { ate79: 15, acima79: 8 } };
-var MERCADO_LIVRE = {
-  comissao: { classico: 13, premium: 17.5 },
+
+/* ============================================================
+   2) TABELA NOVA DO MERCADO LIVRE (artigo oficial - Envios)
+   Colunas de preco: ate 18,99 | 19-48,99 | 49-78,99 | 79-99,99 |
+   100-119,99 | 120-149,99 | 150-199,99 | 200+
+   Linhas de peso: pesoMax com seu custo por coluna
+   ============================================================ */
+var ENVIO_ML = {
   faixasPreco: [
     { limite: 18.99 }, { limite: 48.99 }, { limite: 78.99 }, { limite: 99.99 },
     { limite: 119.99 }, { limite: 149.99 }, { limite: 199.99 }, { limite: Infinity }
@@ -233,10 +299,10 @@ var MERCADO_LIVRE = {
     { pesoMax: 4,    custos: [6.45, 8.75, 9.75, 17.85, 20.75, 23.35, 26.35, 29.25] },
     { pesoMax: 5,    custos: [6.55, 8.85, 10.25, 19.75, 22.85, 26.05, 29.25, 32.45] },
     { pesoMax: 6,    custos: [6.65, 8.95, 10.35, 25.95, 29.15, 33.35, 36.45, 40.85] },
-    { pesoMax: 7,    custos: [6.75, 9.05, 10.45, 27.55, 30.75, 35.15, 38.25, 42.85] },
-    { pesoMax: 8,    custos: [6.85, 9.25, 10.65, 29.45, 32.95, 37.45, 40.85, 45.85] },
-    { pesoMax: 9,    custos: [6.95, 9.45, 10.85, 30.25, 33.95, 38.65, 42.25, 47.45] },
-    { pesoMax: 10,   custos: [7.05, 9.65, 11.05, 38.25, 42.65, 48.85, 52.95, 59.45] },
+    { pesoMax: 7,    custos: [6.75, 9.05, 10.45, 27.55, 31.65, 36.75, 40.85, 45.25] },
+    { pesoMax: 8,    custos: [6.85, 9.25, 10.55, 29.45, 34.35, 39.25, 44.15, 49.35] },
+    { pesoMax: 9,    custos: [6.95, 9.35, 10.65, 30.25, 35.25, 40.35, 45.35, 50.75] },
+    { pesoMax: 10,   custos: [7.05, 9.45, 10.85, 38.25, 45.05, 51.95, 58.75, 65.85] },
     { pesoMax: 11,   custos: [7.05, 9.65, 11.05, 41.65, 48.55, 55.45, 62.35, 69.35] },
     { pesoMax: 13,   custos: [7.15, 10.05, 11.45, 42.55, 49.75, 56.85, 63.85, 70.95] },
     { pesoMax: 15,   custos: [7.25, 10.25, 11.65, 45.55, 52.95, 60.55, 68.15, 75.65] },
@@ -256,28 +322,101 @@ var MERCADO_LIVRE = {
     { pesoMax: Infinity, custos: [8.75, 12.85, 14.45, 167.05, 193.35, 218.45, 243.45, 262.85] }
   ]
 };
-var OLIST = { comissao: 10, taxaFixa: 2, frete: { ate79: 15, acima79: 8 } };
-var RD = { comissao: 8, frete: 10 };
-var SHEIN = { comissao: 12, taxaFixa: 2, frete: { ate49: 12, acima49: 8 } };
-var SHOPEE = { comissao: { ate79: 14, acima79: 16 }, taxaFixa: { ate79: 4, ate99: 5, ate199: 6, acima200: 8 }, frete: 12 };
-var TEMU = { comissao: 0, taxaFixa: 0, frete: 0 };
-var TIKTOK = { comissao: { ate50: 10, acima50: 6 }, taxaFixa: { ate50: 4, acima50: 6 }, frete: 10 };
-var CANAIS = {
-  presencial: PRESENCIAL,
-  amazon: AMAZON,
-  casasBahia: CASAS_BAHIA,
-  magalu: MAGALU,
-  mercadoLivre: MERCADO_LIVRE,
-  olist: OLIST,
-  rd: RD,
-  shein: SHEIN,
-  shopee: SHOPEE,
-  temu: TEMU,
-  tiktok: TIKTOK
-};
 
 /* ============================================================
-   2) MOTOR DE CALCULO
+   3) SINCRONIZACAO COM A PLANILHA PUBLICA (igual a antiga)
+   Se a planilha carregar, atualiza os valores em tempo real.
+   ============================================================ */
+var SHEET_URLS = [
+  "https://docs.google.com/spreadsheets/d/18mMqatenWtyLYyV2s2pAEQRtGokApxA3/gviz/tq?tqx=out:csv&gid=0",
+  "https://docs.google.com/spreadsheets/d/18mMqatenWtyLYyV2s2pAEQRtGokApxA3/export?format=csv&gid=0"
+];
+var FAIXAS_PESO_KEY = ["ate300G", "300a500G", "500Ga1KG", "1a2KG", "2a5KG", "5a9KG", "9a13KG", "13a17KG", "17a23KG", "23a30KG"];
+function aplicarPlanilha(csv) {
+  var linhas = csv.split(/\r?\n/).filter(function (l) { return l.trim() !== ""; });
+  var ini = -1, idxC = -1, idxV = -1;
+  for (var i = 0; i < Math.min(linhas.length, 20); i++) {
+    var h = linhas[i].split(",").map(function (x) { return x.replace(/"/g, "").trim().toLowerCase(); });
+    if (h.indexOf("chave") !== -1 && h.indexOf("valor") !== -1) { ini = i; idxC = h.indexOf("chave"); idxV = h.indexOf("valor"); break; }
+  }
+  if (ini === -1) return;
+  for (var j = ini + 1; j < linhas.length; j++) {
+    var c = linhas[j].split(",").map(function (x) { return x.replace(/"/g, "").trim(); });
+    var chave = c[idxC], valor = parseFloat(String(c[idxV]).replace(",", "."));
+    if (!chave || isNaN(valor)) continue;
+    // Aliquota CNPJ
+    var aliQ = { cnpj_LTDA: "LOJA DA VIVI LTDA", cnpj_FERREIRA: "FERREIRA PROSPERITA COSMETICOS LTDA", cnpj_RAV: "RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA", cnpj_VIVI: "VIVIANE CHRISTINA FERREIRA" };
+    if (aliQ[chave]) { CONFIG.aliq[aliQ[chave]] = valor; continue; }
+    // Comissoes
+    var comQ = { Comissao_Presencial: ["presencial", "comissao"], Comissao_Amazon: ["amazon", "comissao"], Comissao_CasasBahia: ["casasBahia", "comissao"], Comissao_Magalu: ["magalu", "comissao"], Comissao_MLC: ["mercadoLivre", "classico"], Comissao_MLP: ["mercadoLivre", "premium"], Comissao_Olist: ["olist", "comissao"], Comissao_RD: ["rd", "comissao"], Comissao_Shein: ["shein", "comissao"], Comissao_Shopee_ATE79: ["shopee", "ate79"], Comissao_Shopee_ACIMA79: ["shopee", "acima79"], Comissao_Temu: ["temu", "comissao"], Comissao_TikTok_ATE50: ["tiktok", "ate50"], Comissao_TikTok_ACIMA50: ["tiktok", "acima50"] };
+    if (comQ[chave]) {
+      var alvo = comQ[chave];
+      if (alvo[1] === "classico" || alvo[1] === "premium") CONFIG.canais.mercadoLivre.comissao[alvo[1]] = valor;
+      else if (alvo[1] === "ate79" || alvo[1] === "acima79") { if (alvo[0] === "shopee") CONFIG.canais.shopee.comissao[alvo[1]] = valor; else if (alvo[0] === "tiktok") CONFIG.canais.tiktok.comissao[alvo[1]] = valor; }
+      else CONFIG.canais[alvo[0]].comissao = valor;
+      continue;
+    }
+    // Taxas fixas
+    var taxQ = { Taxa_Presencial: ["presencial"], Taxa_Amazon: ["amazon"], Taxa_CasasBahia: ["casasBahia"], Taxa_Magalu_ATE10: ["magalu", "ate10"], Taxa_Magalu_ACIMA10: ["magalu", "acima10"], Taxa_Olist: ["olist"], Taxa_RD: ["rd"], Taxa_Shein: ["shein"], Taxa_Shopee_ATE79: ["shopee", "ate79"], Taxa_Shopee_ATE99: ["shopee", "ate99"], Taxa_Shopee_ATE199: ["shopee", "ate199"], Taxa_Shopee_ACIMA200: ["shopee", "acima200"], Taxa_Temu: ["temu"], Taxa_TikTok_ATE50: ["tiktok", "ate50"], Taxa_TikTok_ACIMA50: ["tiktok", "acima50"], Taxa_ML_ATE29: ["ml", "ate29"], Taxa_ML_ATE50: ["ml", "ate50"], Taxa_ML_ATE79: ["ml", "ate79"], Taxa_ML_ACIMA79: ["ml", "acima79"], Taxa_ML_ATE12_PCT: ["ml", "ate12pct"] };
+    if (taxQ[chave]) {
+      var t = taxQ[chave];
+      if (t[0] === "ml") { CONFIG.canais.mercadoLivre.taxa[t[1]] = valor; continue; }
+      var cfg = CONFIG.canais[t[0]];
+      if (t[1] && typeof cfg.taxa === "object") cfg.taxa[t[1]] = valor;
+      else cfg.taxa = valor;
+      continue;
+    }
+    // Fretes ACIMA79 por peso (ignora ML, que usa a tabela nova)
+    if (chave.indexOf("Frete_") === 0 && chave.indexOf("ML_") === -1) {
+      var partes = chave.split("_");
+      var canalNome = partes[1] ? partes[1].toLowerCase() : "";
+      var mapCanal = { amazon: "amazon", casasbahia: "casasBahia", magalu: "magalu", olist: "olist", rd: "rd", shein: "shein" };
+      var c2 = mapCanal[canalNome];
+      if (c2) {
+        for (var f = 0; f < FAIXAS_PESO_KEY.length; f++) {
+          if (chave.indexOf("ACIMA79_" + FAIXAS_PESO_KEY[f]) !== -1 || chave.indexOf("ACIMA49_" + FAIXAS_PESO_KEY[f]) !== -1) {
+            CONFIG.canais[c2].freteACIMA[f] = valor;
+          }
+        }
+      }
+      if (chave === "Frete_Amazon_ATE30") CONFIG.canais.amazon.freteATE.ate30 = valor;
+      if (chave === "Frete_Amazon_30a50") CONFIG.canais.amazon.freteATE.ate50 = valor;
+      if (chave === "Frete_Amazon_50a79") CONFIG.canais.amazon.freteATE.ate79 = valor;
+      if (chave === "Frete_Shein_ATE49") CONFIG.canais.shein.freteATE.ate49 = valor;
+      continue;
+    }
+    // Niveis
+    if (chave.indexOf("Nivel_") === 0) {
+      var partesN = chave.split("_");
+      var canalN = partesN[1] ? partesN[1].toLowerCase() : "";
+      var mapN = { presencial: "presencial", amazon: "amazon", casasbahia: "casasBahia", magalu: "magalu", ml: "mercadoLivre", olist: "olist", rd: "rd", shein: "shein", shopee: "shopee", temu: "temu", tiktok: "tiktok" };
+      var cN = mapN[canalN];
+      if (cN) {
+        var lvl = parseInt(partesN[2], 10);
+        if (isNaN(lvl)) lvl = 5; // Nivel_X sem numero = nivel fixo p/ todos
+        if (!isNaN(partesN[2])) CONFIG.canais[cN].niveis[lvl] = valor;
+        else for (var k = 1; k <= 5; k++) CONFIG.canais[cN].niveis[k] = valor;
+      }
+      continue;
+    }
+    // Insumos
+    if (chave === "Custo_Insumos_ate300G") CONFIG.insumos.ate300G = valor;
+    if (chave === "Custo_Insumos_acima300G") CONFIG.insumos.acima300G = valor;
+  }
+}
+function sincronizarPlanilha() {
+  function tentar(i) {
+    if (i >= SHEET_URLS.length) return;
+    fetch(SHEET_URLS[i], { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw 0; return r.text(); })
+      .then(function (txt) { aplicarPlanilha(txt); })
+      .catch(function () { tentar(i + 1); });
+  }
+  tentar(0);
+}
+
+/* ============================================================
+   4) MOTOR DE CALCULO (mesma logica da antiga)
    ============================================================ */
 function parseNumero(texto) {
   if (typeof texto === "number") return texto;
@@ -286,20 +425,15 @@ function parseNumero(texto) {
   else if (v.indexOf(",") !== -1) v = v.replace(",", ".");
   return parseFloat(v) || 0;
 }
-function formatarMoeda(valor) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-function custoEnvioML(pesoKg, precoProduto) {
-  var linha = MERCADO_LIVRE.faixasPeso.filter(function (f) { return pesoKg <= f.pesoMax; })[0];
-  var coluna = -1;
-  for (var i = 0; i < MERCADO_LIVRE.faixasPreco.length; i++) {
-    if (precoProduto <= MERCADO_LIVRE.faixasPreco[i].limite) { coluna = i; break; }
-  }
-  if (coluna === -1) coluna = MERCADO_LIVRE.faixasPreco.length - 1;
-  return linha.custos[coluna];
-}
 function porFaixa(obj, preco) {
   if (typeof obj === "number") return obj;
+  if (obj.ate12pct !== undefined) {
+    if (preco <= 12.5) return preco * obj.ate12pct;
+    if (preco <= 29) return obj.ate29 != null ? obj.ate29 : 0;
+    if (preco <= 50) return obj.ate50 != null ? obj.ate50 : 0;
+    if (preco <= 79) return obj.ate79 != null ? obj.ate79 : 0;
+    return obj.acima79 != null ? obj.acima79 : 0;
+  }
   var chaves = Object.keys(obj).sort(function (a, b) {
     var na = parseFloat(a.replace("ate", "").replace("acima", "999999"));
     var nb = parseFloat(b.replace("ate", "").replace("acima", "999999"));
@@ -312,8 +446,22 @@ function porFaixa(obj, preco) {
   return obj.acima79 != null ? obj.acima79
     : obj.acima50 != null ? obj.acima50
     : obj.acima200 != null ? obj.acima200
-    : obj.acima69 != null ? obj.acima69
-    : obj.acima49 != null ? obj.acima49 : 0;
+    : obj.acima10 != null ? obj.acima10 : 0;
+}
+function indicePeso(pesoKg) {
+  for (var i = 0; i < ENVIO_ML.faixasPeso.length; i++) {
+    if (pesoKg <= ENVIO_ML.faixasPeso[i].pesoMax) return i;
+  }
+  return ENVIO_ML.faixasPeso.length - 1;
+}
+function custoEnvioML(pesoKg, precoProduto) {
+  var linha = ENVIO_ML.faixasPeso[indicePeso(pesoKg)];
+  var coluna = -1;
+  for (var i = 0; i < ENVIO_ML.faixasPreco.length; i++) {
+    if (precoProduto <= ENVIO_ML.faixasPreco[i].limite) { coluna = i; break; }
+  }
+  if (coluna === -1) coluna = ENVIO_ML.faixasPreco.length - 1;
+  return linha.custos[coluna];
 }
 function calcularPreco(entradas) {
   var custo = entradas.custo || 0;
@@ -325,44 +473,58 @@ function calcularPreco(entradas) {
   var valorLiq = entradas.valorLiq || 0;
   var pctLiq = entradas.pctLiq || 0;
 
-  var aliquota = (CNPJ_ALIQUOTAS[cnpj] != null ? CNPJ_ALIQUOTAS[cnpj] : 12) / 100;
-  var constNivel = NIVEL_DESCONTO[nivel] != null ? NIVEL_DESCONTO[nivel] : 1;
+  if (CONFIG.usarInsumos) custo += (pesoKg <= 0.3 ? CONFIG.insumos.ate300G : CONFIG.insumos.acima300G);
+  var aliquota = CONFIG.aliq[cnpj] != null ? CONFIG.aliq[cnpj] : 0.10;
+  var idxPeso = indicePeso(pesoKg);
   var resultados = {};
 
-  Object.keys(CANAIS).forEach(function (canal) {
-    var cfg = CANAIS[canal];
-
+  Object.keys(CONFIG.canais).forEach(function (canal) {
+    var cfg = CONFIG.canais[canal];
     var comissaoPct;
     if (typeof cfg.comissao === "number") comissaoPct = cfg.comissao;
     else if (cfg.comissao[plano] !== undefined) comissaoPct = cfg.comissao[plano];
     else comissaoPct = porFaixa(cfg.comissao, 0);
 
-    var denominador = 1 - aliquota - comissaoPct / 100;
+    var denominador = 1 - (aliquota + comissaoPct);
+    var constNivel = cfg.niveis[nivel] != null ? cfg.niveis[nivel] : 1;
 
     function fretePara(preco) {
       if (canal === "mercadoLivre") return custoEnvioML(pesoKg, preco);
       if (typeof cfg.frete === "number") return cfg.frete;
-      return porFaixa(cfg.frete, preco) * constNivel;
+      if (canal === "presencial") return 0;
+      if (cfg.freteATE && preco <= maiorLimite(cfg.freteATE)) return porFaixa(cfg.freteATE, preco) * constNivel;
+      return cfg.freteACIMA[idxPeso] * constNivel;
+    }
+    function maiorLimite(obj) {
+      var m = 0;
+      Object.keys(obj).forEach(function (k) {
+        if (k.indexOf("ate") === 0) m = Math.max(m, parseFloat(k.replace("ate", "")));
+      });
+      return m || 79;
     }
     function taxaPara(preco) {
-      if (cfg.taxaFixa) return porFaixa(cfg.taxaFixa, preco);
-      return 0;
+      if (!cfg.taxa) return 0;
+      return porFaixa(cfg.taxa, preco);
     }
 
     var manual = null;
     if (valorManual > 0) {
-      manual = valorManual * (1 - aliquota - comissaoPct / 100) - custo - fretePara(valorManual) - taxaPara(valorManual);
+      manual = valorManual - (custo + valorManual * (aliquota + comissaoPct) + fretePara(valorManual) + taxaPara(valorManual));
     }
 
     var vliq = null;
     if (valorLiq > 0) {
-      vliq = (valorLiq + custo + fretePara(valorLiq) + taxaPara(valorLiq)) / denominador;
+      var p1 = (valorLiq + custo + fretePara(valorLiq) + taxaPara(valorLiq)) / denominador;
+      var p2 = (valorLiq + custo + fretePara(p1) + taxaPara(p1)) / denominador;
+      vliq = p2;
     }
 
     var pct = null;
     if (pctLiq > 0) {
       var custoComMargem = custo * (1 + pctLiq / 100);
-      pct = (custoComMargem + fretePara(custoComMargem) + taxaPara(custoComMargem)) / denominador;
+      var q1 = (custoComMargem + fretePara(custoComMargem) + taxaPara(custoComMargem)) / denominador;
+      var q2 = (custoComMargem + fretePara(q1) + taxaPara(q1)) / denominador;
+      pct = q2;
     }
 
     resultados[canal] = { manual: manual, vliq: vliq, pct: pct };
@@ -372,7 +534,7 @@ function calcularPreco(entradas) {
 }
 
 /* ============================================================
-   3) INTERFACE
+   5) INTERFACE
    ============================================================ */
 (function () {
   var textEl = document.getElementById("updated-text");
@@ -468,23 +630,17 @@ function calcular() {
       if (Manual > 0) {
         var pct1 = custo > 0 ? (r.manual / custo * 100) : 0;
         cel[1].textContent = fmt(r.manual) + " (" + fmtPct(pct1) + ")";
-      } else {
-        cel[1].textContent = "—";
-      }
+      } else { cel[1].textContent = "—"; }
 
       if (ValorLiq > 0) {
         var pct2 = custo > 0 ? (ValorLiq / custo * 100) : 0;
         cel[2].textContent = fmt(r.vliq) + " (" + fmtPct(pct2) + ")";
-      } else {
-        cel[2].textContent = "—";
-      }
+      } else { cel[2].textContent = "—"; }
 
       if (PctLiq > 0) {
         var lucro = custo * PctLiq / 100;
         cel[3].textContent = fmt(r.pct) + " (" + fmt(lucro) + ")";
-      } else {
-        cel[3].textContent = "—";
-      }
+      } else { cel[3].textContent = "—"; }
     });
 
     fb.dataset.state = "success";
@@ -512,6 +668,7 @@ document.getElementById("clear-calculation").addEventListener("click", function 
   fb.textContent = "Campos limpos. Preencha novamente para calcular.";
 });
 atualizarPills();
+sincronizarPlanilha();
 </script>
 </body>
 </html>
