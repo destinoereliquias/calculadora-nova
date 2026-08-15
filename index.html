@@ -194,8 +194,12 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
 /* ============================================================
    CONFIG - VALORES REAIS (fonte: planilha da calculadora antiga)
    Aliquota por CNPJ: LTDA 10% | FERREIRA 11% | RAV 10% | VIVI 4%
-   Presencial: SEM comissao - apenas aliquota
-   Fretes ACIMA79 por peso, ordem das 10 faixas:
+   Presencial: SEM comissao - apenas aliquota (conforme pedido)
+   INSUMOS: soma R$1 (ate 300g) ou R$2 (acima) ao CUSTO (despesa)
+   Magalu: taxa R$2 quando preco ACIMA de 9,99 (igual antiga)
+   RD: frete = frete_do_peso x comissao 19% (igual antiga)
+   ML: tabela NOVA do artigo oficial (substitui taxas fixas antigas)
+   Ordem das faixas de peso (fretes acima de 79):
    [ate300G, 300a500G, 500Ga1KG, 1a2KG, 2a5KG, 5a9KG, 9a13KG, 13a17KG, 17a23KG, 23a30KG]
    ============================================================ */
 var CONFIG = {
@@ -205,12 +209,14 @@ var CONFIG = {
     "RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA": 0.10,
     "VIVIANE CHRISTINA FERREIRA": 0.04
   },
+  insumos: { ate300G: 1, acima300G: 2 },
+  usarInsumos: true,
   canais: {
     presencial: { comissao: 0, taxa: 0, frete: 0, freteACIMA: [0,0,0,0,0,0,0,0,0,0], niveis: {1:1,2:1,3:1,4:1,5:1} },
     amazon: { comissao: 0.145, taxa: 0, freteATE: { ate30: 4.5, ate50: 6.5, ate79: 6.75 }, freteACIMA: [17.95, 19.3, 20.2, 21.1, 25.6, 41, 69.5, 83.5, 104.5, 129], niveis: {1:1,2:1,3:1,4:1,5:1} },
     casasBahia: { comissao: 0.21, taxa: 0, freteATE: { ate69: 0 }, freteACIMA: [29, 29, 32, 34, 42, 67.9, 91.9, 104.9, 112.9, 119.9], niveis: {1:1,2:1,3:1,4:0.6,5:0.5} },
-    magalu: { comissao: 0.18, taxa: { ate10: 0, acima10: 2 }, freteATE: { ate79: 0 }, freteACIMA: [29.9, 29.9, 35.9, 38.9, 46.9, 68.9, 89.9, 102.9, 125.9, 139.9], niveis: {1:1,2:1,3:0.75,4:0.5,5:0.5} },
-    mercadoLivre: { comissao: { classico: 0.14, premium: 0.19 }, taxa: { ate12pct: 0.005, ate29: 6.25, ate50: 6.5, ate79: 6.75, acima79: 0 }, frete: "TABELA_NOVA", niveis: {1:1,2:1,3:0.6,4:0.5,5:0.5} },
+    magalu: { comissao: 0.18, taxa: { ate9.99: 0, acima10: 2 }, freteATE: { ate79: 0 }, freteACIMA: [29.9, 29.9, 35.9, 38.9, 46.9, 68.9, 89.9, 102.9, 125.9, 139.9], niveis: {1:1,2:1,3:0.75,4:0.5,5:0.5} },
+    mercadoLivre: { comissao: { classico: 0.14, premium: 0.19 }, taxa: 0, frete: "TABELA_NOVA", niveis: {1:1,2:1,3:0.6,4:0.5,5:0.5} },
     olist: { comissao: 0.21, taxa: 5, freteATE: { ate79: 0 }, freteACIMA: [37.9, 38.9, 42.9, 44.9, 52.9, 81.9, 127.9, 142.9, 166.9, 191.9], niveis: {1:0.8,2:0.8,3:0.6,4:0.5,5:0.5} },
     rd: { comissao: 0.19, taxa: 0, freteATE: null, freteACIMA: [40.9, 41.9, 43.9, 46.9, 51.9, 83.9, 131.9, 146.9, 171.9, 197.9], niveis: {1:1,2:1,3:1,4:1,5:1} },
     shein: { comissao: 0.16, taxa: 0, freteATE: { ate49: 0 }, freteACIMA: [4, 5, 5, 5, 15, 32, 63, 73, 89, 106], niveis: {1:1,2:1,3:1,4:1,5:1} },
@@ -276,13 +282,6 @@ function parseNum(v) {
 }
 function porFaixa(obj, preco) {
   if (typeof obj === "number") return obj;
-  if (obj.ate12pct !== undefined) {
-    if (preco <= 12.5) return preco * obj.ate12pct;
-    if (preco <= 29) return obj.ate29 != null ? obj.ate29 : 0;
-    if (preco <= 50) return obj.ate50 != null ? obj.ate50 : 0;
-    if (preco <= 79) return obj.ate79 != null ? obj.ate79 : 0;
-    return obj.acima79 != null ? obj.acima79 : 0;
-  }
   var ates = [];
   Object.keys(obj).forEach(function (k) {
     if (k.indexOf("ate") === 0) ates.push(parseFloat(k.replace("ate", "")));
@@ -328,6 +327,11 @@ function calcularPreco(entradas) {
   var valorLiq = entradas.valorLiq || 0;
   var pctLiq = entradas.pctLiq || 0;
 
+  // INSUMOS: soma ao CUSTO (despesa) - igual calculadora antiga
+  if (CONFIG.usarInsumos) {
+    custo += (pesoKg <= 0.3 ? CONFIG.insumos.ate300G : CONFIG.insumos.acima300G);
+  }
+
   var aliquota = CONFIG.aliq[cnpj] != null ? CONFIG.aliq[cnpj] : 0.10;
   var idxPeso = indicePeso(pesoKg);
   var resultados = {};
@@ -346,6 +350,7 @@ function calcularPreco(entradas) {
       if (canal === "mercadoLivre") return custoEnvioML(pesoKg, preco);
       if (typeof cfg.frete === "number") return cfg.frete;
       if (canal === "presencial") return 0;
+      if (canal === "rd") return (cfg.freteACIMA[idxPeso] || 0) * cfg.comissao;
       if (cfg.freteATE && preco <= maiorLimite(cfg.freteATE)) return porFaixa(cfg.freteATE, preco) * constNivel;
       return (cfg.freteACIMA[idxPeso] || 0) * constNivel;
     }
@@ -463,6 +468,9 @@ function calcular() {
     if (!(custo > 0)) { fb.dataset.state = "error"; fb.textContent = "Informe um custo maior que zero."; return; }
     if (!(Manual > 0 || ValorLiq > 0 || PctLiq > 0)) { fb.dataset.state = "error"; fb.textContent = "Preencha ao menos um modo de calculo."; return; }
 
+    // Custo total com insumo (para as porcentagens - igual antiga)
+    var custoTotal = custo + (CONFIG.usarInsumos ? (pesoKg <= 0.3 ? CONFIG.insumos.ate300G : CONFIG.insumos.acima300G) : 0);
+
     var linhas = document.getElementById("result-body").children;
     LINHAS.forEach(function (l, i) {
       var res = calcularPreco({ custo: custo, cnpj: cnpj, nivel: nivel, pesoKg: pesoKg, plano: l[2], valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq });
@@ -470,17 +478,17 @@ function calcular() {
       var cel = linhas[i].children;
 
       if (Manual > 0) {
-        var pct1 = custo > 0 ? (r.manual / custo * 100) : 0;
+        var pct1 = custoTotal > 0 ? (r.manual / custoTotal * 100) : 0;
         cel[1].textContent = fmt(r.manual) + " (" + fmtPct(pct1) + ")";
       } else { cel[1].textContent = "—"; }
 
       if (ValorLiq > 0) {
-        var pct2 = custo > 0 ? (ValorLiq / custo * 100) : 0;
+        var pct2 = custoTotal > 0 ? (ValorLiq / custoTotal * 100) : 0;
         cel[2].textContent = fmt(r.vliq) + " (" + fmtPct(pct2) + ")";
       } else { cel[2].textContent = "—"; }
 
       if (PctLiq > 0) {
-        var lucro = custo * PctLiq / 100;
+        var lucro = custoTotal * PctLiq / 100;
         cel[3].textContent = fmt(r.pct) + " (" + fmt(lucro) + ")";
       } else { cel[3].textContent = "—"; }
     });
