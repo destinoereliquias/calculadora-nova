@@ -11,6 +11,7 @@
 body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
 .wrap{max-width:1000px;margin:0 auto;padding:24px;padding-bottom:90px}
 .app-header{background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;padding:24px 28px;color:#fff;display:flex;align-items:center;gap:18px;position:relative;overflow:hidden}
+.app-header::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;background:rgba(255,255,255,.12);border-radius:50%}
 .mascot{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #fff;background:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .header-text{flex:1;position:relative;z-index:2}
 .eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:.7rem;opacity:.9;margin:0}
@@ -24,6 +25,7 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
 .btn-ghost{background:rgba(255,255,255,.22);color:#fff;backdrop-filter:blur(4px)}
 .btn-pink{background:var(--primary);color:#fff}
 .btn-pink:hover{background:var(--primary-dark)}
+.btn-outline{background:transparent;color:var(--primary);border:1px solid var(--primary)}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;margin-top:18px;box-shadow:var(--shadow)}
 .panel h2{margin:0 0 4px;font-size:1.1rem}
 .panel-sub{color:var(--muted);font-size:.85rem;margin:0 0 16px}
@@ -35,6 +37,9 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
 .file-name{color:var(--muted);font-size:.85rem}
 .info-msg{font-size:.85rem;color:var(--ok);margin:10px 0 0;min-height:18px}
 .info-msg.err{color:var(--danger)}
+.manual-form{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end;margin-top:12px}
+.manual-form .field{margin:0}
+@media(max-width:700px){.manual-form{grid-template-columns:1fr 1fr}.manual-form .field:first-child{grid-column:1/-1}}
 .preview-grid{display:grid;gap:6px;margin-top:12px}
 .plabel{border:2px solid var(--primary);border-radius:8px;padding:8px;text-align:center;background:#fff;color:#4a1d33;page-break-inside:avoid}
 .plabel.bw{border-color:#000;color:#000}
@@ -62,7 +67,7 @@ body *{visibility:hidden}
     <div class="header-text">
       <p class="eyebrow">✦ Subsistema interno</p>
       <h1>Tabela de Precos em A4</h1>
-      <p class="subtitle">Importe planilha XLS/CSV e gere etiquetas em grade.</p>
+      <p class="subtitle">Importe planilha XLS/CSV ou adicione itens manualmente.</p>
       <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando ultima atualizacao...</span></span>
       <div class="header-actions">
         <button id="toggle-dark-mode" class="btn btn-ghost" type="button">Tema escuro</button>
@@ -74,9 +79,9 @@ body *{visibility:hidden}
   <main>
     <section class="panel">
       <h2>Importar planilha</h2>
-      <p class="panel-sub">Fluxo: importar arquivo, escolher modelo e imprimir. O arquivo deve ter colunas Produto, De e Por (ou usar a 1a coluna como produto, 2a como preco De, 3a como preco Por).</p>
+      <p class="panel-sub">Fluxo: importar arquivo, escolher modelo e imprimir. O arquivo deve ter colunas Produto, De e Por.</p>
       <div class="controls-grid">
-        <label class="field">Escolher arquivo (XLS/CSV)
+        <label class="field">Escolher arquivo (CSV / XLS / XLSX)
           <div class="file-row">
             <input id="file-input" type="file" accept=".csv,.xls,.xlsx,.txt">
             <span class="file-name" id="file-name">Nenhum arquivo escolhido</span>
@@ -92,15 +97,31 @@ body *{visibility:hidden}
         </label>
       </div>
       <p id="info-msg" class="info-msg"></p>
-      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
-        <button id="btn-adicionar-manual" class="btn btn-outline" type="button">+ Adicionar item manual</button>
+    </section>
+
+    <section class="panel">
+      <h2>Adicionar item manual</h2>
+      <p class="panel-sub">Preencha os campos e clique em Adicionar. Repita para cada produto.</p>
+      <div class="manual-form">
+        <label class="field">Nome do produto
+          <input id="m-nome" placeholder="Ex: Batom Matte Vermelho">
+        </label>
+        <label class="field">Preco De (R$)
+          <input id="m-de" inputmode="decimal" placeholder="0,00">
+        </label>
+        <label class="field">Preco Por (R$)
+          <input id="m-por" inputmode="decimal" placeholder="0,00">
+        </label>
+        <button id="btn-adicionar" class="btn btn-pink" type="button">Adicionar</button>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
         <button id="btn-limpar" class="btn btn-outline" type="button">Limpar itens</button>
       </div>
     </section>
 
     <section class="panel">
       <h2>Pre-visualizacao</h2>
-      <p class="panel-sub">Etiquetas geradas a partir do arquivo importado.</p>
+      <p class="panel-sub">Etiquetas geradas a partir do arquivo importado ou dos itens manuais.</p>
       <div class="preview-grid" id="preview"></div>
     </section>
   </main>
@@ -129,7 +150,15 @@ function esc(t){return String(t==null?"":t).replace(/</g,"&lt;").replace(/>/g,"&
 
 var itens=[];
 
-// Monta a grade de pre-visualizacao
+function montarEtiqueta(it,bw){
+  var d=document.createElement("div");
+  d.className="plabel"+(bw?" bw":"");
+  d.innerHTML='<div class="p-logo">LOJA DA VIVI</div><div class="p-name">'+esc(it.nome)+'</div>'+
+    (it.de>0?'<div class="p-de">De '+fmt(it.de)+'</div>':'')+
+    '<div class="p-por">'+(it.por>0?"POR "+fmt(it.por):"")+'</div>';
+  return d;
+}
+
 function renderizar(){
   var prev=document.getElementById("preview");
   prev.innerHTML="";
@@ -141,17 +170,9 @@ function renderizar(){
     return;
   }
   var bw=modelo.indexOf("bw")!==-1;
-  itens.forEach(function(it){
-    var d=document.createElement("div");
-    d.className="plabel"+(bw?" bw":"");
-    d.innerHTML='<div class="p-logo">LOJA DA VIVI</div><div class="p-name">'+esc(it.nome)+'</div>'+
-      (it.de>0?'<div class="p-de">De '+fmt(it.de)+'</div>':'')+
-      '<div class="p-por">'+(it.por>0?"POR "+fmt(it.por):"")+'</div>';
-    prev.appendChild(d);
-  });
+  itens.forEach(function(it){prev.appendChild(montarEtiqueta(it,bw))});
 }
 
-// Monta a grade de impressao (A4)
 function gerarImpressao(){
   var area=document.getElementById("print-area");
   area.innerHTML="";
@@ -162,18 +183,11 @@ function gerarImpressao(){
   var wrap=document.createElement("div");
   wrap.className="print-ready";
   wrap.style.gridTemplateColumns="repeat("+cols+",1fr)";
-  itens.forEach(function(it){
-    var d=document.createElement("div");
-    d.className="plabel"+(bw?" bw":"");
-    d.innerHTML='<div class="p-logo">LOJA DA VIVI</div><div class="p-name">'+esc(it.nome)+'</div>'+
-      (it.de>0?'<div class="p-de">De '+fmt(it.de)+'</div>':'')+
-      '<div class="p-por">'+(it.por>0?"POR "+fmt(it.por):"")+'</div>';
-    wrap.appendChild(d);
-  });
+  itens.forEach(function(it){wrap.appendChild(montarEtiqueta(it,bw))});
   area.appendChild(wrap);
 }
 
-// Le o arquivo (CSV ou XLS/XLSX)
+// Importa arquivo
 document.getElementById("file-input").addEventListener("change",function(e){
   var file=e.target.files[0];
   if(!file)return;
@@ -238,23 +252,51 @@ function processarLinhas(dados){
   renderizar();
 }
 
+// Adicionar item manual (formulario na pagina - sem prompt)
+function adicionarManual(){
+  var nome=document.getElementById("m-nome").value.trim();
+  var info=document.getElementById("info-msg");
+  if(!nome){
+    info.className="info-msg err";
+    info.textContent="Digite o nome do produto.";
+    document.getElementById("m-nome").focus();
+    return;
+  }
+  var de=parseNum(document.getElementById("m-de").value);
+  var por=parseNum(document.getElementById("m-por").value);
+  if(por<=0&&de<=0){
+    info.className="info-msg err";
+    info.textContent="Informe ao menos um preco (De ou Por).";
+    return;
+  }
+  itens.push({nome:nome,de:de,por:por});
+  document.getElementById("m-nome").value="";
+  document.getElementById("m-de").value="";
+  document.getElementById("m-por").value="";
+  info.className="info-msg";
+  info.textContent=itens.length+" item(ns) na lista.";
+  document.getElementById("m-nome").focus();
+  renderizar();
+}
+
+document.getElementById("btn-adicionar").addEventListener("click",adicionarManual);
+["m-nome","m-de","m-por"].forEach(function(id){
+  document.getElementById(id).addEventListener("keydown",function(e){
+    if(e.key==="Enter"){e.preventDefault();adicionarManual();}
+  });
+});
+
 document.getElementById("modelo").addEventListener("change",renderizar);
 document.getElementById("btn-print").addEventListener("click",function(){gerarImpressao();window.print()});
-document.getElementById("btn-limpar").addEventListener("click",function(){itens=[];document.getElementById("file-name").textContent="Nenhum arquivo escolhido";document.getElementById("file-input").value="";document.getElementById("info-msg").className="info-msg";document.getElementById("info-msg").textContent="";renderizar()});
-
-// Adicionar item manual (campo rapido)
-document.getElementById("btn-adicionar-manual").addEventListener("click",function(){
-  var nome=prompt("Nome do produto:");
-  if(!nome||nome.trim()==="")return;
-  var de=prompt("Preco De (R$) (opcional):","");
-  var por=prompt("Preco Por (R$):","");
-  itens.push({nome:nome.trim(),de:parseNum(de),por:parseNum(por)});
+document.getElementById("btn-limpar").addEventListener("click",function(){
+  itens=[];
+  document.getElementById("file-name").textContent="Nenhum arquivo escolhido";
+  document.getElementById("file-input").value="";
   document.getElementById("info-msg").className="info-msg";
-  document.getElementById("info-msg").textContent=itens.length+" itens.";
+  document.getElementById("info-msg").textContent="";
   renderizar();
 });
 
-// Carrega o leitor de XLSX via CDN (so se precisar)
 var scriptXLS=document.createElement("script");
 scriptXLS.src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
 document.head.appendChild(scriptXLS);
