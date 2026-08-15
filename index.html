@@ -216,11 +216,18 @@
   <script src="config.js"></script>
   <script src="calculadora.js"></script>
   <script>
-    // ---------- Login ----------
+    // ============================================================
+    // 🔑 SENHAS DE ACESSO — EDITE AQUI
+    // Cada linha abaixo é um usuário. Para adicionar um novo,
+    // copie uma linha e troque o user e o pass.
+    // Exemplo: { user: "maria", pass: "1234" },
+    // ============================================================
     const AUTH = [
       { user: "renato", pass: "otaner" },
       { user: "viviane", pass: "0212" },
     ];
+
+    // ---------- Login ----------
     const loginForm = document.getElementById("login-form");
     const loginError = document.getElementById("login-error");
     const overlay = document.getElementById("login-overlay");
@@ -260,12 +267,21 @@
     themeBtn.textContent = document.documentElement.classList.contains("dark-mode") ? "Tema claro" : "Tema escuro";
     themeBtn.addEventListener("click", applyTheme);
 
-    // ---------- Marketplaces ----------
-    const CANAIS_UI = [
-      ["presencial", "PRESENCIAL"], ["amazon", "AMAZON"], ["casasBahia", "CASAS BAHIA"],
-      ["magalu", "MAGALU"], ["mercadoLivre", "MERCADO LIVRE"], ["olist", "OLIST"],
-      ["rd", "RD"], ["shein", "SHEIN"], ["shopee", "SHOPEE"],
-      ["temu", "TEMU"], ["tiktok", "TIKTOK"],
+    // ---------- Linhas da tabela (ML separado em 2) ----------
+    // Formato: [canal, rótulo, plano do Mercado Livre]
+    const LINHAS = [
+      ["presencial", "PRESENCIAL", "classico"],
+      ["amazon", "AMAZON", "classico"],
+      ["casasBahia", "CASAS BAHIA", "classico"],
+      ["magalu", "MAGALU", "classico"],
+      ["mercadoLivre", "MERCADO LIVRE CLÁSSICO", "classico"],
+      ["mercadoLivre", "MERCADO LIVRE PREMIUM", "premium"],
+      ["olist", "OLIST", "classico"],
+      ["rd", "RD", "classico"],
+      ["shein", "SHEIN", "classico"],
+      ["shopee", "SHOPEE", "classico"],
+      ["temu", "TEMU", "classico"],
+      ["tiktok", "TIKTOK", "classico"],
     ];
 
     function parseNum(v) {
@@ -295,20 +311,14 @@
 
       const tbody = document.getElementById("result-body");
       tbody.innerHTML = "";
-      CANAIS_UI.forEach(([canal, rotulo]) => {
-        const res = calcularPreco({
-          custo, cnpj, nivel, pesoKg, plano: "classico",
-          modo: "manual", valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq,
-        });
+      LINHAS.forEach(([canal, rotulo, plano]) => {
+        const res = calcularPreco({ custo, cnpj, nivel, pesoKg, plano, valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq });
         const r = res[canal];
         const tr = document.createElement("tr");
-        const manual = Manual > 0 ? fmt(r.valor) : "—";
-        const vl = ValorLiq > 0 ? fmt(r.valor) : "—";
-        const pct = PctLiq > 0 ? fmt(r.valor) : "—";
         tr.innerHTML = `<th class="marketplace-cell">${rotulo}</th>
-          <td class="result-cell">${manual}</td>
-          <td class="result-cell">${vl}</td>
-          <td class="result-cell">${pct}</td>`;
+          <td class="result-cell">${Manual > 0 ? fmt(r.manual) : "—"}</td>
+          <td class="result-cell">${ValorLiq > 0 ? fmt(r.vliq) : "—"}</td>
+          <td class="result-cell">${PctLiq > 0 ? fmt(r.pct) : "—"}</td>`;
         tbody.appendChild(tr);
       });
       feedback.dataset.state = "success";
