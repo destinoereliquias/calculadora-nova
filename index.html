@@ -79,7 +79,7 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
       <p class="eyebrow">✦ Subsistema interno</p>
       <h1>Calculadora da Loja da Vivi</h1>
       <p class="subtitle">Precos consistentes para todos os marketplaces.</p>
-      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando ultima atualizacao...</span></span>
+      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Ultima atualizacao: 15/08/2026</span></span>
       <div class="header-actions">
         <button id="toggle-dark-mode" class="btn btn-ghost" type="button">Tema escuro</button>
         <button id="clear-calculation" class="btn btn-ghost" type="button">Limpar calculo</button>
@@ -194,7 +194,7 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
 /* ============================================================
    CONFIG - VALORES REAIS (fonte: planilha da calculadora antiga)
    Aliquota por CNPJ: LTDA 10% | FERREIRA 11% | RAV 10% | VIVI 4%
-   Presencial: SEM comissao - apenas aliquota (conforme pedido)
+   PRESENCIAL: comissao 3,29% (custo da maquina de pagamento)
    INSUMOS: soma R$1 (ate 300g) ou R$2 (acima) ao CUSTO (despesa)
    Magalu: taxa R$2 quando preco ACIMA de 9,99 (igual antiga)
    RD: frete = frete_do_peso x comissao 19% (igual antiga)
@@ -212,7 +212,7 @@ var CONFIG = {
   insumos: { ate300G: 1, acima300G: 2 },
   usarInsumos: true,
   canais: {
-    presencial: { comissao: 0, taxa: 0, frete: 0, freteACIMA: [0,0,0,0,0,0,0,0,0,0], niveis: {1:1,2:1,3:1,4:1,5:1} },
+    presencial: { comissao: 0.0329, taxa: 0, frete: 0, freteACIMA: [0,0,0,0,0,0,0,0,0,0], niveis: {1:1,2:1,3:1,4:1,5:1} },
     amazon: { comissao: 0.145, taxa: 0, freteATE: { ate30: 4.5, ate50: 6.5, ate79: 6.75 }, freteACIMA: [17.95, 19.3, 20.2, 21.1, 25.6, 41, 69.5, 83.5, 104.5, 129], niveis: {1:1,2:1,3:1,4:1,5:1} },
     casasBahia: { comissao: 0.21, taxa: 0, freteATE: { ate69: 0 }, freteACIMA: [29, 29, 32, 34, 42, 67.9, 91.9, 104.9, 112.9, 119.9], niveis: {1:1,2:1,3:1,4:0.6,5:0.5} },
     magalu: { comissao: 0.18, taxa: { ate9.99: 0, acima10: 2 }, freteATE: { ate79: 0 }, freteACIMA: [29.9, 29.9, 35.9, 38.9, 46.9, 68.9, 89.9, 102.9, 125.9, 139.9], niveis: {1:1,2:1,3:0.75,4:0.5,5:0.5} },
@@ -381,19 +381,6 @@ function calcularPreco(entradas) {
 /* ============================================================
    INTERFACE
    ============================================================ */
-(function () {
-  var textEl = document.getElementById("updated-text");
-  fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1")
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      var commit = Array.isArray(data) ? data[0] : null;
-      if (!commit || !commit.commit) throw new Error("sem dados");
-      var d = new Date(commit.commit.committer.date);
-      textEl.textContent = "Ultima atualizacao: " + d.toLocaleDateString("pt-BR") + " as " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    })
-    .catch(function () { textEl.textContent = "Ultima atualizacao: indisponivel"; });
-})();
-
 var themeBtn = document.getElementById("toggle-dark-mode");
 function applyTheme() {
   var dark = document.documentElement.classList.toggle("dark-mode");
