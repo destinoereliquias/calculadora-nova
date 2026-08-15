@@ -79,7 +79,7 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
       <p class="eyebrow">✦ Subsistema interno</p>
       <h1>Calculadora da Loja da Vivi</h1>
       <p class="subtitle">Precos consistentes para todos os marketplaces.</p>
-      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Ultima atualizacao: 15/08/2026</span></span>
+      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando ultima atualizacao...</span></span>
       <div class="header-actions">
         <button id="toggle-dark-mode" class="btn btn-ghost" type="button">Tema escuro</button>
         <button id="clear-calculation" class="btn btn-ghost" type="button">Limpar calculo</button>
@@ -379,8 +379,42 @@ function calcularPreco(entradas) {
 }
 
 /* ============================================================
-   INTERFACE
+   SELO DE ULTIMA ATUALIZACAO (data + hora, com cache)
+   Busca a data do ultimo commit no GitHub. Se a API falhar
+   (limite de consultas), usa o ultimo valor salvo no navegador.
    ============================================================ */
+(function () {
+  var textEl = document.getElementById("updated-text");
+  function mostrar(iso) {
+    var d = new Date(iso);
+    textEl.textContent = "Ultima atualizacao: " + d.toLocaleDateString("pt-BR") + " as " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }
+  function cacheValido() {
+    try {
+      var obj = JSON.parse(localStorage.getItem("ultimaAtualizacao") || "null");
+      if (obj && obj.iso && (Date.now() - obj.ts < 5 * 60 * 1000)) { mostrar(obj.iso); return true; }
+    } catch (e) {}
+    return false;
+  }
+  if (cacheValido()) return;
+  fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var commit = Array.isArray(data) ? data[0] : null;
+      if (!commit || !commit.commit) throw new Error("sem dados");
+      var iso = commit.commit.committer.date;
+      mostrar(iso);
+      try { localStorage.setItem("ultimaAtualizacao", JSON.stringify({ ts: Date.now(), iso: iso })); } catch (e) {}
+    })
+    .catch(function () {
+      try {
+        var obj = JSON.parse(localStorage.getItem("ultimaAtualizacao") || "null");
+        if (obj && obj.iso) { mostrar(obj.iso); return; }
+      } catch (e) {}
+      textEl.textContent = "Ultima atualizacao: indisponivel";
+    });
+})();
+
 var themeBtn = document.getElementById("toggle-dark-mode");
 function applyTheme() {
   var dark = document.documentElement.classList.toggle("dark-mode");
