@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Preços — Loja da Vivi</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f5f5f5; color: #1a1a1a; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 1.5rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+    label { display: flex; flex-direction: column; font-size: .85rem; gap: 4px; }
+    input, select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+    .modes { display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+    .modes label { flex-direction: row; align-items: center; gap: 6px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
+    th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; font-size: .9rem; }
+    th { background: #1a1a1a; color: #fff; }
+    tr:nth-child(even) { background: #fafafa; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Calculadora de Preços — Loja da Vivi</h1>
+    <div class="grid">
+      <label>CNPJ
+        <select id="cnpj">
+          <option>LOJA DA VIVI LTDA</option>
+          <option>FERREIRA PROSPERITA COSMETICOS LTDA</option>
+          <option>RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA</option>
+          <option>VIVIANE CHRISTINA FERREIRA</option>
+        </select>
+      </label>
+      <label>Peso (kg)
+        <input id="peso" type="number" step="0.1" value="1" placeholder="ex: 2.5">
+      </label>
+      <label>Custo (R$)
+        <input id="custo" type="number" step="0.01" value="50" placeholder="0,00">
+      </label>
+      <label>Nível (1–5)
+        <select id="nivel">
+          <option value="5">5</option><option value="4">4</option>
+          <option value="3">3</option><option value="2">2</option><option value="1">1</option>
+        </select>
+      </label>
+      <label>Plano Mercado Livre
+        <select id="plano"><option value="classico">Clássico</option><option value="premium">Premium</option></select>
+      </label>
+    </div>
+
+    <div class="modes">
+      <label><input type="radio" name="modo" value="manual" checked> Manual (R$)</label>
+      <label><input type="radio" name="modo" value="valorLiq"> Valor líquido (R$)</label>
+      <label><input type="radio" name="modo" value="pctLiq"> Percentual (%)</label>
+      <label>Valor <input id="valor" type="number" step="0.01" value="100"></label>
+    </div>
+
+    <table id="tabela">
+      <thead>
+        <tr><th>Canal</th><th class="num">Resultado</th><th class="num">Frete</th><th class="num">Taxa</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="calculadora.js"></script>
+  <script>
+    const rotulos = {
+      presencial: "Presencial", amazon: "Amazon", casasBahia: "Casas Bahia",
+      magalu: "Magalu", mercadoLivre: "Mercado Livre", olist: "Olist",
+      rd: "RD", shein: "Shein", shopee: "Shopee", temu: "Temu", tiktok: "TikTok",
+    };
+
+    function calcular() {
+      const modo = document.querySelector("input[name=modo]:checked").value;
+      const valor = parseFloat(document.getElementById("valor").value) || 0;
+      const res = calcularPreco({
+        custo: parseFloat(document.getElementById("custo").value) || 0,
+        cnpj: document.getElementById("cnpj").value,
+        nivel: parseInt(document.getElementById("nivel").value),
+        pesoKg: parseFloat(document.getElementById("peso").value) || 0,
+        plano: document.getElementById("plano").value,
+        modo, valorManual: valor, valorLiq: valor, pctLiq: valor,
+      });
+
+      const tbody = document.querySelector("#tabela tbody");
+      tbody.innerHTML = "";
+      Object.entries(res).forEach(([canal, r]) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${rotulos[canal] || canal}</td>
+          <td class="num">${formatarMoeda(r.valor)}</td>
+          <td class="num">${formatarMoeda(r.frete)}</td>
+          <td class="num">${formatarMoeda(r.taxa)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.querySelectorAll("input, select").forEach((el) =>
+      el.addEventListener("input", calcular));
+    calcular();
+  </script>
+</body>
+</html>
