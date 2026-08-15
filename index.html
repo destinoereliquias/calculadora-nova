@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calculadora de Marketplaces - Loja da Vivi</title>
 <style>
-:root{--bg:#fdf2f8;--surface:#fff;--text:#4a1d33;--muted:#a06b87;--border:#f8d7e8;--primary:#db2777;--primary-dark:#be185d;--primary-light:#fce7f3;--accent:#f472b6;--ok:#10b981;--danger:#ef4444;--shadow:0 4px 20px rgba(219,39,119,.10)}
-.dark-mode{--bg:#1c2330;--surface:#232b39;--text:#eef1f6;--muted:#9aa7bd;--border:#323e52;--primary:#f472b6;--primary-dark:#ec4899;--primary-light:#3a2b45;--accent:#f9a8d4;--ok:#34d399;--danger:#f87171;--shadow:0 4px 20px rgba(0,0,0,.4)}
+:root{--bg:#fdf2f8;--surface:#fff;--text:#4a1d33;--muted:#a06b87;--border:#e5c9d9;--primary:#db2777;--primary-dark:#be185d;--primary-light:#fce7f3;--accent:#f472b6;--ok:#10b981;--danger:#ef4444;--shadow:0 4px 20px rgba(219,39,119,.10)}
+.dark-mode{--bg:#1c2330;--surface:#232b39;--text:#eef1f6;--muted:#9aa7bd;--border:#3d4a63;--primary:#f472b6;--primary-dark:#ec4899;--primary-light:#3a2b45;--accent:#f9a8d4;--ok:#34d399;--danger:#f87171;--shadow:0 4px 20px rgba(0,0,0,.4)}
 *{box-sizing:border-box}
 body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
 .wrap{max-width:1150px;margin:0 auto;padding:24px;padding-bottom:90px}
@@ -46,8 +46,6 @@ details ol{margin:8px 0 0;padding-left:20px}
 .mode-badge.manual{background:var(--primary)}
 .mode-badge.vl{background:var(--ok)}
 .mode-badge.pct{background:#f59e0b}
-
-/* Pills de modo (iguais ao modelo) */
 .mode-pills{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .mode-pill{padding:7px 16px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:.8rem;font-weight:600;transition:all .15s}
 .mode-pill.on-manual{background:#fff;border-color:#fff;color:#333;box-shadow:0 1px 4px rgba(0,0,0,.15)}
@@ -55,19 +53,16 @@ details ol{margin:8px 0 0;padding-left:20px}
 .mode-pill.on-pct{background:#f59e0b;border-color:#f59e0b;color:#fff}
 .dark-mode .mode-pill.on-manual{background:#eef1f6;border-color:#eef1f6;color:#1c2330}
 
-/* Tabela alinhada em grade */
+/* TABELA EM GRADE - cada celula com borda visivel (quadradinhos) */
 .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
 .results-table{width:100%;border-collapse:collapse;table-layout:fixed}
-.results-table th,.results-table td{padding:11px 14px;font-size:.88rem;overflow:hidden;text-overflow:ellipsis}
-.results-table thead th{background:var(--bg);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.5px;border-bottom:1px solid var(--border);text-align:center;padding-top:13px;padding-bottom:13px}
+.results-table th,.results-table td{padding:10px 12px;font-size:.88rem;border:1px solid var(--border);text-align:center;overflow:hidden;text-overflow:ellipsis}
+.results-table thead th{background:var(--bg);color:var(--muted);font-weight:700;text-transform:uppercase;font-size:.7rem;letter-spacing:.5px;padding-top:13px;padding-bottom:13px}
 .results-table thead th:first-child{text-align:left}
-.results-table tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
-.results-table tbody tr:last-child{border-bottom:none}
+.results-table tbody tr:nth-child(even){background:rgba(124,58,237,.03)}
 .results-table tbody tr:hover{background:var(--primary-light)}
 .results-table .marketplace-cell{font-weight:600;text-align:left;white-space:nowrap}
 .results-table .result-cell{text-align:right;font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
-.results-table tbody td:nth-child(2),.results-table tbody td:nth-child(3),.results-table tbody td:nth-child(4){width:26.5%}
-.results-table tbody td:nth-child(1){width:20.5%}
 .app-footer{margin-top:28px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:.82rem;text-align:center;margin-bottom:70px}
 .footer-kicker{text-transform:uppercase;letter-spacing:2px;font-size:.68rem;margin:0;color:var(--primary);font-weight:600}
 .footer-title{margin:4px 0;font-weight:700;color:var(--text)}
@@ -170,7 +165,7 @@ details ol{margin:8px 0 0;padding-left:20px}
 
     <section class="panel">
       <h2>Resultados por marketplace</h2>
-      <p class="panel-sub">Comparativo completo por canal com os 3 modos de calculo ativos.</p>
+      <p class="panel-sub">Comparativo completo por canal com os 3 modos de calculo ativos. Colunas 1 e 2 mostram a % aplicada; ultima coluna mostra o valor liquido de ganho.</p>
       <div class="mode-pills">
         <span class="mode-pill" id="pill-manual">Manual</span>
         <span class="mode-pill" id="pill-vl">Valor liquido</span>
@@ -209,7 +204,6 @@ details ol{margin:8px 0 0;padding-left:20px}
 <script>
 /* ============================================================
    1) CONFIG - TODAS AS TAXAS, COMISSOES E FRETES
-   Edite SOMENTE esta secao para alterar qualquer valor.
    ============================================================ */
 var MARGEM_PADRAO = 30;
 var NIVEL_DESCONTO = { 5: 0.85, 4: 0.90, 3: 0.95, 2: 1.00, 1: 1.05 };
@@ -437,8 +431,8 @@ function parseNum(v) {
   return parseFloat(s) || 0;
 }
 function fmt(v) { return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
+function fmtPct(v) { return v.toFixed(2).replace(".", ",") + "%"; }
 
-// Atualiza o destaque das pílulas conforme os modos preenchidos
 function atualizarPills() {
   var m = parseNum(document.getElementById("Manual").value) > 0;
   var v = parseNum(document.getElementById("ValorLiq").value) > 0;
@@ -470,9 +464,27 @@ function calcular() {
       var res = calcularPreco({ custo: custo, cnpj: cnpj, nivel: nivel, pesoKg: pesoKg, plano: l[2], valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq });
       var r = res[l[0]];
       var cel = linhas[i].children;
-      cel[1].textContent = Manual > 0 ? fmt(r.manual) : "—";
-      cel[2].textContent = ValorLiq > 0 ? fmt(r.vliq) : "—";
-      cel[3].textContent = PctLiq > 0 ? fmt(r.pct) : "—";
+
+      if (Manual > 0) {
+        var pct1 = custo > 0 ? (r.manual / custo * 100) : 0;
+        cel[1].textContent = fmt(r.manual) + " (" + fmtPct(pct1) + ")";
+      } else {
+        cel[1].textContent = "—";
+      }
+
+      if (ValorLiq > 0) {
+        var pct2 = custo > 0 ? (ValorLiq / custo * 100) : 0;
+        cel[2].textContent = fmt(r.vliq) + " (" + fmtPct(pct2) + ")";
+      } else {
+        cel[2].textContent = "—";
+      }
+
+      if (PctLiq > 0) {
+        var lucro = custo * PctLiq / 100;
+        cel[3].textContent = fmt(r.pct) + " (" + fmt(lucro) + ")";
+      } else {
+        cel[3].textContent = "—";
+      }
     });
 
     fb.dataset.state = "success";
