@@ -202,6 +202,8 @@ details ol{margin:8px 0 0;padding-left:20px}
 <script>
 /* ============================================================
    1) CONFIG - VALORES DA PLANILHA PUBLICA (calculadora antiga)
+   PRESENCIAL: SEM COMISSAO - APENAS ALIQUOTA DO CNPJ
+   Alíquotas: Loja da Vivi 10% | Ferreira 11% | Rav Shefa 10% | Viviane 4%
    Ordem das faixas de peso (fretes ACIMA79):
    [ate300G, 300a500G, 500Ga1KG, 1a2KG, 2a5KG, 5a9KG, 9a13KG, 13a17KG, 17a23KG, 23a30KG]
    ============================================================ */
@@ -216,7 +218,7 @@ var CONFIG = {
   usarInsumos: false,
   canais: {
     presencial: {
-      comissao: 0.0329, comissaoRAV: 0.0329, taxa: 0,
+      comissao: 0, comissaoRAV: 0, taxa: 0,
       freteATE: null, freteACIMA: [0,0,0,0,0,0,0,0,0,0],
       niveis: {1:1,2:1,3:1,4:1,5:1}
     },
@@ -326,6 +328,7 @@ var ENVIO_ML = {
 /* ============================================================
    3) SINCRONIZACAO COM A PLANILHA PUBLICA (igual a antiga)
    Se a planilha carregar, atualiza os valores em tempo real.
+   Comissao_Presencial e BLOQUEADA - nao volta nunca.
    ============================================================ */
 var SHEET_URLS = [
   "https://docs.google.com/spreadsheets/d/18mMqatenWtyLYyV2s2pAEQRtGokApxA3/gviz/tq?tqx=out:csv&gid=0",
@@ -344,19 +347,16 @@ function aplicarPlanilha(csv) {
     var c = linhas[j].split(",").map(function (x) { return x.replace(/"/g, "").trim(); });
     var chave = c[idxC], valor = parseFloat(String(c[idxV]).replace(",", "."));
     if (!chave || isNaN(valor)) continue;
-    // Aliquota CNPJ
     var aliQ = { cnpj_LTDA: "LOJA DA VIVI LTDA", cnpj_FERREIRA: "FERREIRA PROSPERITA COSMETICOS LTDA", cnpj_RAV: "RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA", cnpj_VIVI: "VIVIANE CHRISTINA FERREIRA" };
     if (aliQ[chave]) { CONFIG.aliq[aliQ[chave]] = valor; continue; }
-    // Comissoes
     var comQ = { Comissao_Presencial: ["presencial", "comissao"], Comissao_Amazon: ["amazon", "comissao"], Comissao_CasasBahia: ["casasBahia", "comissao"], Comissao_Magalu: ["magalu", "comissao"], Comissao_MLC: ["mercadoLivre", "classico"], Comissao_MLP: ["mercadoLivre", "premium"], Comissao_Olist: ["olist", "comissao"], Comissao_RD: ["rd", "comissao"], Comissao_Shein: ["shein", "comissao"], Comissao_Shopee_ATE79: ["shopee", "ate79"], Comissao_Shopee_ACIMA79: ["shopee", "acima79"], Comissao_Temu: ["temu", "comissao"], Comissao_TikTok_ATE50: ["tiktok", "ate50"], Comissao_TikTok_ACIMA50: ["tiktok", "acima50"] };
-    if (comQ[chave]) {
+    if (comQ[chave] && chave !== "Comissao_Presencial") {
       var alvo = comQ[chave];
       if (alvo[1] === "classico" || alvo[1] === "premium") CONFIG.canais.mercadoLivre.comissao[alvo[1]] = valor;
       else if (alvo[1] === "ate79" || alvo[1] === "acima79") { if (alvo[0] === "shopee") CONFIG.canais.shopee.comissao[alvo[1]] = valor; else if (alvo[0] === "tiktok") CONFIG.canais.tiktok.comissao[alvo[1]] = valor; }
       else CONFIG.canais[alvo[0]].comissao = valor;
       continue;
     }
-    // Taxas fixas
     var taxQ = { Taxa_Presencial: ["presencial"], Taxa_Amazon: ["amazon"], Taxa_CasasBahia: ["casasBahia"], Taxa_Magalu_ATE10: ["magalu", "ate10"], Taxa_Magalu_ACIMA10: ["magalu", "acima10"], Taxa_Olist: ["olist"], Taxa_RD: ["rd"], Taxa_Shein: ["shein"], Taxa_Shopee_ATE79: ["shopee", "ate79"], Taxa_Shopee_ATE99: ["shopee", "ate99"], Taxa_Shopee_ATE199: ["shopee", "ate199"], Taxa_Shopee_ACIMA200: ["shopee", "acima200"], Taxa_Temu: ["temu"], Taxa_TikTok_ATE50: ["tiktok", "ate50"], Taxa_TikTok_ACIMA50: ["tiktok", "acima50"], Taxa_ML_ATE29: ["ml", "ate29"], Taxa_ML_ATE50: ["ml", "ate50"], Taxa_ML_ATE79: ["ml", "ate79"], Taxa_ML_ACIMA79: ["ml", "acima79"], Taxa_ML_ATE12_PCT: ["ml", "ate12pct"] };
     if (taxQ[chave]) {
       var t = taxQ[chave];
@@ -366,7 +366,6 @@ function aplicarPlanilha(csv) {
       else cfg.taxa = valor;
       continue;
     }
-    // Fretes ACIMA79 por peso (ignora ML, que usa a tabela nova)
     if (chave.indexOf("Frete_") === 0 && chave.indexOf("ML_") === -1) {
       var partes = chave.split("_");
       var canalNome = partes[1] ? partes[1].toLowerCase() : "";
@@ -385,7 +384,6 @@ function aplicarPlanilha(csv) {
       if (chave === "Frete_Shein_ATE49") CONFIG.canais.shein.freteATE.ate49 = valor;
       continue;
     }
-    // Niveis
     if (chave.indexOf("Nivel_") === 0) {
       var partesN = chave.split("_");
       var canalN = partesN[1] ? partesN[1].toLowerCase() : "";
@@ -393,13 +391,11 @@ function aplicarPlanilha(csv) {
       var cN = mapN[canalN];
       if (cN) {
         var lvl = parseInt(partesN[2], 10);
-        if (isNaN(lvl)) lvl = 5; // Nivel_X sem numero = nivel fixo p/ todos
-        if (!isNaN(partesN[2])) CONFIG.canais[cN].niveis[lvl] = valor;
-        else for (var k = 1; k <= 5; k++) CONFIG.canais[cN].niveis[k] = valor;
+        if (isNaN(lvl)) { for (var k = 1; k <= 5; k++) CONFIG.canais[cN].niveis[k] = valor; }
+        else CONFIG.canais[cN].niveis[lvl] = valor;
       }
       continue;
     }
-    // Insumos
     if (chave === "Custo_Insumos_ate300G") CONFIG.insumos.ate300G = valor;
     if (chave === "Custo_Insumos_acima300G") CONFIG.insumos.acima300G = valor;
   }
