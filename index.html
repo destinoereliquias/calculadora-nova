@@ -201,10 +201,10 @@ details ol{margin:8px 0 0;padding-left:20px}
 
 <script>
 /* ============================================================
-   1) CONFIG - VALORES DA PLANILHA PUBLICA (calculadora antiga)
-   PRESENCIAL: SEM COMISSAO - APENAS ALIQUOTA DO CNPJ
+   1) CONFIG - VALORES REAIS DA PLANILHA ANTIGA
    Alíquotas: Loja da Vivi 10% | Ferreira 11% | Rav Shefa 10% | Viviane 4%
-   Ordem das faixas de peso (fretes ACIMA79):
+   Presencial: SEM comissao - apenas alíquota (conforme pedido)
+   Fretes ACIMA79 por peso, ordem:
    [ate300G, 300a500G, 500Ga1KG, 1a2KG, 2a5KG, 5a9KG, 9a13KG, 13a17KG, 17a23KG, 23a30KG]
    ============================================================ */
 var CONFIG = {
@@ -214,8 +214,6 @@ var CONFIG = {
     "RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA": 0.10,
     "VIVIANE CHRISTINA FERREIRA": 0.04
   },
-  insumos: { ate300G: 1, acima300G: 2 },
-  usarInsumos: false,
   canais: {
     presencial: {
       comissao: 0, comissaoRAV: 0, taxa: 0,
@@ -238,13 +236,13 @@ var CONFIG = {
       comissao: 0.18, taxa: { ate10: 0, acima10: 2 },
       freteATE: { ate79: 0 },
       freteACIMA: [29.9, 29.9, 35.9, 38.9, 46.9, 68.9, 89.9, 102.9, 125.9, 139.9],
-      niveis: {1:1,2:1,3:0.75,4:0.6,5:0.5}
+      niveis: {1:1,2:1,3:0.75,4:0.5,5:0.5}
     },
     mercadoLivre: {
       comissao: { classico: 0.14, premium: 0.19 },
       taxa: { ate12pct: 0.005, ate29: 6.25, ate50: 6.5, ate79: 6.75, acima79: 0 },
       frete: "TABELA_NOVA",
-      niveis: {1:1,2:1,3:1,4:1,5:0.5}
+      niveis: {1:1,2:1,3:0.6,4:0.5,5:0.5}
     },
     olist: {
       comissao: 0.21, taxa: 5,
@@ -284,7 +282,6 @@ var CONFIG = {
    2) TABELA NOVA DO MERCADO LIVRE (artigo oficial - Envios)
    Colunas de preco: ate 18,99 | 19-48,99 | 49-78,99 | 79-99,99 |
    100-119,99 | 120-149,99 | 150-199,99 | 200+
-   Linhas de peso: pesoMax com seu custo por coluna
    ============================================================ */
 var ENVIO_ML = {
   faixasPreco: [
@@ -327,8 +324,7 @@ var ENVIO_ML = {
 
 /* ============================================================
    3) SINCRONIZACAO COM A PLANILHA PUBLICA (igual a antiga)
-   Se a planilha carregar, atualiza os valores em tempo real.
-   Comissao_Presencial e BLOQUEADA - nao volta nunca.
+   Atualiza valores em tempo real. Comissao_Presencial bloqueada.
    ============================================================ */
 var SHEET_URLS = [
   "https://docs.google.com/spreadsheets/d/18mMqatenWtyLYyV2s2pAEQRtGokApxA3/gviz/tq?tqx=out:csv&gid=0",
@@ -366,18 +362,20 @@ function aplicarPlanilha(csv) {
       else cfg.taxa = valor;
       continue;
     }
-    if (chave.indexOf("Frete_") === 0 && chave.indexOf("ML_") === -1) {
-      var partes = chave.split("_");
-      var canalNome = partes[1] ? partes[1].toLowerCase() : "";
-      var mapCanal = { amazon: "amazon", casasbahia: "casasBahia", magalu: "magalu", olist: "olist", rd: "rd", shein: "shein" };
-      var c2 = mapCanal[canalNome];
-      if (c2) {
-        for (var f = 0; f < FAIXAS_PESO_KEY.length; f++) {
-          if (chave.indexOf("ACIMA79_" + FAIXAS_PESO_KEY[f]) !== -1 || chave.indexOf("ACIMA49_" + FAIXAS_PESO_KEY[f]) !== -1) {
-            CONFIG.canais[c2].freteACIMA[f] = valor;
-          }
-        }
+    // Fretes por peso (ignora ML, que usa a tabela nova)
+    if (chave.indexOf("Frete_") === 0 && chave.indexOf("_ML_") === -1 && chave.indexOf("Frete_ML_") === -1) {
+      var idx = -1;
+      for (var f = 0; f < FAIXAS_PESO_KEY.length; f++) {
+        if (chave.indexOf(FAIXAS_PESO_KEY[f]) !== -1) { idx = f; break; }
       }
+      var canalFrete = null;
+      if (chave.indexOf("Frete_Amazon") === 0) canalFrete = "amazon";
+      else if (chave.indexOf("Frete_CasasBahia") === 0) canalFrete = "casasBahia";
+      else if (chave.indexOf("Frete_Magalu") === 0) canalFrete = "magalu";
+      else if (chave.indexOf("Frete_Olist") === 0) canalFrete = "olist";
+      else if (chave.indexOf("Frete_RD") === 0) canalFrete = "rd";
+      else if (chave.indexOf("Frete_Shein") === 0) canalFrete = "shein";
+      if (canalFrete && idx !== -1) CONFIG.canais[canalFrete].freteACIMA[idx] = valor;
       if (chave === "Frete_Amazon_ATE30") CONFIG.canais.amazon.freteATE.ate30 = valor;
       if (chave === "Frete_Amazon_30a50") CONFIG.canais.amazon.freteATE.ate50 = valor;
       if (chave === "Frete_Amazon_50a79") CONFIG.canais.amazon.freteATE.ate79 = valor;
@@ -396,8 +394,6 @@ function aplicarPlanilha(csv) {
       }
       continue;
     }
-    if (chave === "Custo_Insumos_ate300G") CONFIG.insumos.ate300G = valor;
-    if (chave === "Custo_Insumos_acima300G") CONFIG.insumos.acima300G = valor;
   }
 }
 function sincronizarPlanilha() {
@@ -412,7 +408,7 @@ function sincronizarPlanilha() {
 }
 
 /* ============================================================
-   4) MOTOR DE CALCULO (mesma logica da antiga)
+   4) MOTOR DE CALCULO (mesma formula da antiga)
    ============================================================ */
 function parseNumero(texto) {
   if (typeof texto === "number") return texto;
@@ -459,6 +455,13 @@ function custoEnvioML(pesoKg, precoProduto) {
   if (coluna === -1) coluna = ENVIO_ML.faixasPreco.length - 1;
   return linha.custos[coluna];
 }
+function maiorLimite(obj) {
+  var m = 0;
+  Object.keys(obj).forEach(function (k) {
+    if (k.indexOf("ate") === 0) m = Math.max(m, parseFloat(k.replace("ate", "")));
+  });
+  return m || 79;
+}
 function calcularPreco(entradas) {
   var custo = entradas.custo || 0;
   var cnpj = entradas.cnpj || "";
@@ -469,7 +472,6 @@ function calcularPreco(entradas) {
   var valorLiq = entradas.valorLiq || 0;
   var pctLiq = entradas.pctLiq || 0;
 
-  if (CONFIG.usarInsumos) custo += (pesoKg <= 0.3 ? CONFIG.insumos.ate300G : CONFIG.insumos.acima300G);
   var aliquota = CONFIG.aliq[cnpj] != null ? CONFIG.aliq[cnpj] : 0.10;
   var idxPeso = indicePeso(pesoKg);
   var resultados = {};
@@ -489,14 +491,7 @@ function calcularPreco(entradas) {
       if (typeof cfg.frete === "number") return cfg.frete;
       if (canal === "presencial") return 0;
       if (cfg.freteATE && preco <= maiorLimite(cfg.freteATE)) return porFaixa(cfg.freteATE, preco) * constNivel;
-      return cfg.freteACIMA[idxPeso] * constNivel;
-    }
-    function maiorLimite(obj) {
-      var m = 0;
-      Object.keys(obj).forEach(function (k) {
-        if (k.indexOf("ate") === 0) m = Math.max(m, parseFloat(k.replace("ate", "")));
-      });
-      return m || 79;
+      return (cfg.freteACIMA[idxPeso] || 0) * constNivel;
     }
     function taxaPara(preco) {
       if (!cfg.taxa) return 0;
@@ -510,17 +505,13 @@ function calcularPreco(entradas) {
 
     var vliq = null;
     if (valorLiq > 0) {
-      var p1 = (valorLiq + custo + fretePara(valorLiq) + taxaPara(valorLiq)) / denominador;
-      var p2 = (valorLiq + custo + fretePara(p1) + taxaPara(p1)) / denominador;
-      vliq = p2;
+      vliq = (valorLiq + custo + fretePara(valorLiq) + taxaPara(valorLiq)) / denominador;
     }
 
     var pct = null;
     if (pctLiq > 0) {
       var custoComMargem = custo * (1 + pctLiq / 100);
-      var q1 = (custoComMargem + fretePara(custoComMargem) + taxaPara(custoComMargem)) / denominador;
-      var q2 = (custoComMargem + fretePara(q1) + taxaPara(q1)) / denominador;
-      pct = q2;
+      pct = (custoComMargem + fretePara(custoComMargem) + taxaPara(custoComMargem)) / denominador;
     }
 
     resultados[canal] = { manual: manual, vliq: vliq, pct: pct };
