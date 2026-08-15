@@ -1,69 +1,45 @@
-/**
- * CONFIG — TODAS AS TAXAS, COMISSÕES E FRETES DA CALCULADORA
- *
- * Edite SOMENTE este arquivo para alterar qualquer valor.
- * O motor (calculadora.js) lê tudo daqui automaticamente.
- *
- * NOVIDADE: Mercado Livre passa a usar tabela PESO x PREÇO
- * a partir de 24/08/2026 (novo custo dos Envios).
- */
+
+---
+
+## 📄 Arquivo 1 — `config.js` (substitua)
+```js
+/** CONFIG - TODAS AS TAXAS, COMISSOES E FRETES DA CALCULADORA
+ *  Edite SOMENTE este arquivo para alterar qualquer valor.
+ *  O motor (calculadora.js) le tudo daqui automaticamente.
+ *  NOVIDADE: Mercado Livre passa a usar tabela PESO x PRECO
+ *  a partir de 24/08/2026 (novo custo dos Envios). */
 
 // ---------- GLOBAIS ----------
-const MARGEM_PADRAO = 30;          // margem % usada no modo Manual
-const NIVEL_DESCONTO = {           // desconto de frete por nível
-  5: 0.85, 4: 0.90, 3: 0.95, 2: 1.00, 1: 1.05,
-};
+const MARGEM_PADRAO = 30; // margem % usada no modo Manual
+const NIVEL_DESCONTO = { 5: 0.85, 4: 0.90, 3: 0.95, 2: 1.00, 1: 1.05 };
 
-// Alíquota de impostos por CNPJ (%) — ajuste conforme sua realidade
+// Aliquota de impostos por CNPJ (%)
 const CNPJ_ALIQUOTAS = {
   "LOJA DA VIVI LTDA": 12,
   "FERREIRA PROSPERITA COSMETICOS LTDA": 12,
   "RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA": 10,
-  "VIVIANE CHRISTINA FERREIRA": 12,
+  "VIVIANE CHRISTINA FERREIRA": 12
 };
 
 // ---------- PRESENCIAL ----------
-const PRESENCIAL = {
-  comissao: 0, taxaFixa: 0, frete: 0,
-};
+const PRESENCIAL = { comissao: 0, taxaFixa: 0, frete: 0 };
 
 // ---------- AMAZON ----------
-const AMAZON = {
-  comissao: 15, // %
-  frete: { ate30: 15, ate50: 12, ate79: 8, acima79: 5 }, // R$
-};
+const AMAZON = { comissao: 15, frete: { ate30: 15, ate50: 12, ate79: 8, acima79: 5 } };
 
 // ---------- CASAS BAHIA ----------
-const CASAS_BAHIA = {
-  comissao: 10, // %
-  taxaFixa: 2,  // R$
-  frete: { ate69: 20, acima69: 0 }, // R$
-};
+const CASAS_BAHIA = { comissao: 10, taxaFixa: 2, frete: { ate69: 20, acima69: 0 } };
 
 // ---------- MAGALU ----------
-const MAGALU = {
-  comissao: 12, // %
-  taxaFixa: { ate10: 3, acima10: 5 }, // R$
-  frete: { ate79: 15, acima79: 8 },   // R$
-};
+const MAGALU = { comissao: 12, taxaFixa: { ate10: 3, acima10: 5 }, frete: { ate79: 15, acima79: 8 } };
 
-// ---------- MERCADO LIVRE (NOVO: peso x preço) ----------
+// ---------- MERCADO LIVRE (NOVO: peso x preco) ----------
 const MERCADO_LIVRE = {
-  comissao: { classico: 13, premium: 17.5 }, // %
-
-  // Faixas de PREÇO (colunas) — em R$
+  comissao: { classico: 13, premium: 17.5 },
   faixasPreco: [
-    { limite: 18.99 },    // R$ 0 a R$ 18,99
-    { limite: 48.99 },    // R$ 19 a R$ 48,99
-    { limite: 78.99 },    // R$ 49 a R$ 78,99
-    { limite: 99.99 },    // R$ 79 a R$ 99,99
-    { limite: 119.99 },   // R$ 100 a R$ 119,99
-    { limite: 149.99 },   // R$ 120 a R$ 149,99
-    { limite: 199.99 },   // R$ 150 a R$ 199,99
-    { limite: Infinity }, // a partir de R$ 200
+    { limite: 18.99 }, { limite: 48.99 }, { limite: 78.99 }, { limite: 99.99 },
+    { limite: 119.99 }, { limite: 149.99 }, { limite: 199.99 }, { limite: Infinity }
   ],
-
-  // Faixas de PESO (linhas) — 8 valores, um por faixa de preço
   faixasPeso: [
     { pesoMax: 0.3,  custos: [5.65, 6.85, 8.15, 12.95, 14.95, 16.95, 19.05, 21.65] },
     { pesoMax: 0.5,  custos: [5.95, 6.95, 8.25, 13.85, 16.15, 18.15, 20.45, 23.25] },
@@ -94,48 +70,31 @@ const MERCADO_LIVRE = {
     { pesoMax: 100,  custos: [8.45, 12.65, 13.85, 107.45, 124.85, 140.45, 156.45, 168.85] },
     { pesoMax: 125,  custos: [8.55, 12.85, 14.05, 120.15, 138.95, 156.95, 174.85, 188.85] },
     { pesoMax: 150,  custos: [8.65, 12.85, 14.25, 127.45, 147.05, 166.55, 185.55, 200.35] },
-    { pesoMax: Infinity, custos: [8.75, 12.85, 14.45, 167.05, 193.35, 218.45, 243.45, 262.85] },
-  ],
+    { pesoMax: Infinity, custos: [8.75, 12.85, 14.45, 167.05, 193.35, 218.45, 243.45, 262.85] }
+  ]
 };
 
 // ---------- OLIST ----------
-const OLIST = {
-  comissao: 10, // %
-  taxaFixa: 2,  // R$
-  frete: { ate79: 15, acima79: 8 }, // R$
-};
+const OLIST = { comissao: 10, taxaFixa: 2, frete: { ate79: 15, acima79: 8 } };
 
-// ---------- RD (cliente especial, cálculo simplificado) ----------
-const RD = {
-  comissao: 8,  // %
-  frete: 10,    // R$
-};
+// ---------- RD (cliente especial, calculo simplificado) ----------
+const RD = { comissao: 8, frete: 10 };
 
 // ---------- SHEIN ----------
-const SHEIN = {
-  comissao: 12, // %
-  taxaFixa: 2,  // R$
-  frete: { ate49: 12, acima49: 8 }, // R$
-};
+const SHEIN = { comissao: 12, taxaFixa: 2, frete: { ate49: 12, acima49: 8 } };
 
 // ---------- SHOPEE ----------
 const SHOPEE = {
-  comissao: { ate79: 14, acima79: 16 }, // %
-  taxaFixa: { ate79: 4, ate99: 5, ate199: 6, acima200: 8 }, // R$
-  frete: 12, // R$
+  comissao: { ate79: 14, acima79: 16 },
+  taxaFixa: { ate79: 4, ate99: 5, ate199: 6, acima200: 8 },
+  frete: 12
 };
 
-// ---------- TEMU (sem comissão/frete/taxa, só alíquota CNPJ) ----------
-const TEMU = {
-  comissao: 0, taxaFixa: 0, frete: 0,
-};
+// ---------- TEMU (sem comissao/frete/taxa, so aliquota CNPJ) ----------
+const TEMU = { comissao: 0, taxaFixa: 0, frete: 0 };
 
 // ---------- TIKTOK ----------
-const TIKTOK = {
-  comissao: { ate50: 10, acima50: 6 }, // %
-  taxaFixa: { ate50: 4, acima50: 6 },  // R$
-  frete: 10, // R$
-};
+const TIKTOK = { comissao: { ate50: 10, acima50: 6 }, taxaFixa: { ate50: 4, acima50: 6 }, frete: 10 };
 
 // ---------- REGISTRO GERAL DE CANAIS ----------
 const CANAIS = {
@@ -149,5 +108,6 @@ const CANAIS = {
   shein: SHEIN,
   shopee: SHOPEE,
   temu: TEMU,
-  tiktok: TIKTOK,
+  tiktok: TIKTOK
 };
+```*
