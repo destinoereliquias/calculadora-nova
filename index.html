@@ -1,363 +1,215 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora de Marketplaces - Loja da Vivi</title>
-  <style>
-    :root {
-      --bg: #f4f5fb; --surface: #ffffff; --text: #1f2430; --muted: #6b7280;
-      --border: #e5e7eb; --primary: #7c3aed; --primary-dark: #6d28d9;
-      --primary-light: #ede9fe; --accent: #ec4899; --ok: #10b981; --danger: #ef4444;
-      --shadow: 0 4px 20px rgba(124, 58, 237, .08);
-    }
-    .dark-mode {
-      --bg: #0f1117; --surface: #1a1d27; --text: #e5e7eb; --muted: #9ca3af;
-      --border: #2a2e3a; --primary: #a78bfa; --primary-dark: #8b5cf6;
-      --primary-light: #2a2440; --accent: #f472b6; --ok: #34d399; --danger: #f87171;
-      --shadow: 0 4px 20px rgba(0,0,0,.4);
-    }
-    * { box-sizing: border-box; }
-    body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
-    .wrap { max-width: 1150px; margin: 0 auto; padding: 24px; padding-bottom: 90px; }
-
-    /* Header */
-    .app-header { background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 16px; padding: 32px; color: #fff; position: relative; overflow: hidden; }
-    .app-header::after { content: ""; position: absolute; right: -40px; top: -40px; width: 200px; height: 200px; background: rgba(255,255,255,.1); border-radius: 50%; }
-    .eyebrow { text-transform: uppercase; letter-spacing: 2px; font-size: .72rem; opacity: .85; margin: 0; }
-    .app-header h1 { margin: 6px 0 4px; font-size: 1.8rem; font-weight: 700; }
-    .subtitle { margin: 0; opacity: .9; font-size: .95rem; }
-    .updated-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3); padding: 6px 12px; border-radius: 999px; font-size: .78rem; font-weight: 600; backdrop-filter: blur(4px); }
-    .updated-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,.3); }
-    .header-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; position: relative; z-index: 2; }
-    .btn { padding: 9px 16px; border: none; border-radius: 10px; font-size: .88rem; cursor: pointer; font-weight: 600; transition: transform .15s, box-shadow .15s; }
-    .btn:hover { transform: translateY(-1px); }
-    .btn-ghost { background: rgba(255,255,255,.2); color: #fff; backdrop-filter: blur(4px); }
-    .btn-ghost:hover { background: rgba(255,255,255,.3); }
-
-    /* Panels */
-    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-top: 20px; box-shadow: var(--shadow); }
-    .panel h2 { margin: 0 0 4px; font-size: 1.15rem; }
-    .panel-sub { color: var(--muted); font-size: .85rem; margin: 0 0 16px; }
-    details { color: var(--muted); font-size: .85rem; margin-bottom: 16px; background: var(--bg); border-radius: 8px; padding: 10px 14px; }
-    details[open] { padding-bottom: 14px; }
-    details ol { margin: 8px 0 0; padding-left: 20px; }
-    details li { margin: 2px 0; }
-    .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
-    .field { display: flex; flex-direction: column; gap: 6px; font-size: .82rem; font-weight: 600; }
-    .field input, .field select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font-size: .95rem; font-weight: 400; transition: border-color .15s, box-shadow .15s; }
-    .field input:focus, .field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
-    .money-input-wrap { display: flex; align-items: center; gap: 6px; }
-    .money-input-wrap span { color: var(--muted); font-weight: 600; }
-    .calc-feedback { font-size: .85rem; color: var(--muted); margin: 16px 0 0; padding: 10px 14px; border-radius: 8px; background: var(--bg); min-height: 20px; }
-    .calc-feedback[data-state="success"] { color: var(--ok); background: rgba(16,185,129,.1); }
-    .calc-feedback[data-state="error"] { color: var(--danger); background: rgba(239,68,68,.1); }
-
-    /* Mode cards */
-    .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-    .mode-card { border: 1px solid var(--border); border-radius: 14px; padding: 18px; background: var(--surface); transition: box-shadow .2s, transform .2s; }
-    .mode-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
-    .mode-card h3 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
-    .mode-card p { color: var(--muted); font-size: .82rem; margin: 0 0 14px; }
-    .mode-badge { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    .mode-badge.manual { background: var(--primary); }
-    .mode-badge.vl { background: var(--accent); }
-    .mode-badge.pct { background: var(--ok); }
-
-    /* Table */
-    .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
-    .results-table { width: 100%; border-collapse: collapse; }
-    .results-table th, .results-table td { padding: 12px 14px; text-align: left; font-size: .88rem; }
-    .results-table thead th { background: var(--bg); color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: .72rem; letter-spacing: .5px; border-bottom: 1px solid var(--border); }
-    .results-table tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
-    .results-table tbody tr:last-child { border-bottom: none; }
-    .results-table tbody tr:hover { background: var(--primary-light); }
-    .results-table .marketplace-cell { font-weight: 600; }
-    .results-table .result-cell { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
-
-    /* Footer */
-    .app-footer { margin-top: 28px; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; color: var(--muted); font-size: .82rem; text-align: center; margin-bottom: 70px; }
-    .footer-kicker { text-transform: uppercase; letter-spacing: 2px; font-size: .68rem; margin: 0; color: var(--primary); font-weight: 600; }
-    .footer-title { margin: 4px 0; font-weight: 700; color: var(--text); }
-    .footer-text { margin: 0; }
-
-    /* Navegação inferior */
-    .nav-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px 16px;
-      z-index: 40;
-      box-shadow: 0 -2px 10px rgba(0,0,0,.05);
-    }
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      padding: 6px 14px;
-      border: none;
-      border-radius: 10px;
-      background: transparent;
-      color: var(--muted);
-      font-size: .72rem;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background .15s, color .15s;
-    }
-    .nav-item:hover { background: var(--primary-light); color: var(--primary); }
-    .nav-item.is-active { color: var(--primary); font-weight: 600; }
-    .nav-item .nav-icon { font-size: 1.1rem; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Marketplaces - Loja da Vivi</title>
+<style>
+:root{--bg:#fdf2f8;--surface:#fff;--text:#4a1d33;--muted:#a06b87;--border:#f8d7e8;--primary:#db2777;--primary-dark:#be185d;--primary-light:#fce7f3;--accent:#f472b6;--ok:#10b981;--danger:#ef4444;--shadow:0 4px 20px rgba(219,39,119,.10)}
+.dark-mode{--bg:#160b12;--surface:#231220;--text:#f3e3ec;--muted:#b489a0;--border:#3a2230;--primary:#f472b6;--primary-dark:#ec4899;--primary-light:#3a2230;--accent:#f9a8d4;--ok:#34d399;--danger:#f87171;--shadow:0 4px 20px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
+.wrap{max-width:1150px;margin:0 auto;padding:24px;padding-bottom:90px}
+.app-header{background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;padding:28px 32px;color:#fff;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden}
+.app-header::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(255,255,255,.12);border-radius:50%}
+.mascot{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid #fff;background:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.header-text{flex:1;position:relative;z-index:2}
+.eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:.72rem;opacity:.9;margin:0}
+.app-header h1{margin:6px 0 4px;font-size:1.7rem}
+.subtitle{margin:0;opacity:.92;font-size:.92rem}
+.updated-badge{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:5px 12px;border-radius:999px;font-size:.76rem;font-weight:600;backdrop-filter:blur(4px)}
+.updated-badge .dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.3)}
+.header-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:2}
+.btn{padding:8px 14px;border:none;border-radius:10px;font-size:.85rem;cursor:pointer;font-weight:600;transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.22);color:#fff;backdrop-filter:blur(4px)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-top:20px;box-shadow:var(--shadow)}
+.panel h2{margin:0 0 4px;font-size:1.15rem}
+.panel-sub{color:var(--muted);font-size:.85rem;margin:0 0 16px}
+details{color:var(--muted);font-size:.85rem;margin-bottom:16px;background:var(--bg);border-radius:8px;padding:10px 14px}
+details[open]{padding-bottom:14px}
+details ol{margin:8px 0 0;padding-left:20px}
+details li{margin:2px 0}
+.controls-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:.82rem;font-weight:600}
+.field input,.field select{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:.95rem;font-weight:400;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.money-input-wrap{display:flex;align-items:center;gap:6px}
+.money-input-wrap span{color:var(--muted);font-weight:600}
+.calc-feedback{font-size:.85rem;color:var(--muted);margin:16px 0 0;padding:10px 14px;border-radius:8px;background:var(--bg);min-height:20px}
+.calc-feedback[data-state="success"]{color:var(--ok);background:rgba(16,185,129,.1)}
+.calc-feedback[data-state="error"]{color:var(--danger);background:rgba(239,68,68,.1)}
+.mode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.mode-card{border:1px solid var(--border);border-radius:14px;padding:18px;background:var(--surface);transition:box-shadow .2s,transform .2s}
+.mode-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.mode-card h3{margin:0 0 6px;font-size:1rem;display:flex;align-items:center;gap:8px}
+.mode-card p{color:var(--muted);font-size:.82rem;margin:0 0 14px}
+.mode-badge{width:8px;height:8px;border-radius:50%;display:inline-block}
+.mode-badge.manual{background:var(--primary)}
+.mode-badge.vl{background:var(--accent)}
+.mode-badge.pct{background:var(--ok)}
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+.results-table{width:100%;border-collapse:collapse}
+.results-table th,.results-table td{padding:12px 14px;text-align:left;font-size:.88rem}
+.results-table thead th{background:var(--bg);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.results-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+.results-table tbody tr:last-child{border-bottom:none}
+.results-table tbody tr:hover{background:var(--primary-light)}
+.results-table .marketplace-cell{font-weight:600}
+.results-table .result-cell{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.app-footer{margin-top:28px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:.82rem;text-align:center;margin-bottom:70px}
+.footer-kicker{text-transform:uppercase;letter-spacing:2px;font-size:.68rem;margin:0;color:var(--primary);font-weight:600}
+.footer-title{margin:4px 0;font-weight:700;color:var(--text)}
+.footer-text{margin:0}
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:center;gap:8px;padding:10px 16px;z-index:40;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 14px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer;text-decoration:none;transition:background .15s,color .15s}
+.nav-item:hover{background:var(--primary-light);color:var(--primary)}
+.nav-item.is-active{color:var(--primary);font-weight:600}
+.nav-item .nav-icon{font-size:1.1rem}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header class="app-header">
+<div class="wrap">
+  <header class="app-header">
+    <img src="mascote.jpg" alt="Mascote Loja da Vivi" class="mascot">
+    <div class="header-text">
       <p class="eyebrow">✦ Subsistema interno</p>
       <h1>Calculadora da Loja da Vivi</h1>
       <p class="subtitle">Preços consistentes para todos os marketplaces.</p>
-      <span class="updated-badge" id="updated-badge">
-        <span class="dot"></span>
-        <span id="updated-text">Buscando última atualização...</span>
-      </span>
+      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando última atualização...</span></span>
       <div class="header-actions">
         <button id="toggle-dark-mode" class="btn btn-ghost" type="button">🌙 Tema escuro</button>
         <button id="clear-calculation" class="btn btn-ghost" type="button">↺ Limpar cálculo</button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <main>
-      <section class="panel">
-        <h2>Parâmetros da operação</h2>
-        <p class="panel-sub">Defina os dados do produto para calcular.</p>
-        <details open>
-          <summary>Como usar em 4 passos</summary>
-          <ol>
-            <li>Selecione o CNPJ e o peso.</li>
-            <li>Informe o custo do produto.</li>
-            <li>Preencha apenas um modo de cálculo.</li>
-            <li>Confira os resultados por marketplace.</li>
-          </ol>
-        </details>
-        <div class="controls-grid">
-          <label class="field">CNPJ
-            <select id="cnpj">
-              <option value="Selecione">Selecione...</option>
-              <option>LOJA DA VIVI LTDA</option>
-              <option>FERREIRA PROSPERITA COSMETICOS LTDA</option>
-              <option>RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA</option>
-              <option>VIVIANE CHRISTINA FERREIRA</option>
-            </select>
-          </label>
-          <label class="field">Peso
-            <select id="peso">
-              <option value="Selecione">Selecione...</option>
-              <option value="0.3">até 0.3kg</option>
-              <option value="0.5">0.3 a 0.5kg</option>
-              <option value="1">0.5 a 1kg</option>
-              <option value="2">1 a 2kg</option>
-              <option value="5">2 a 5kg</option>
-              <option value="9">5 a 9kg</option>
-              <option value="13">9 a 13kg</option>
-              <option value="17">13 a 17kg</option>
-              <option value="23">17 a 23kg</option>
-              <option value="30">23 a 30kg</option>
-            </select>
-          </label>
-          <label class="field">Custo
-            <div class="money-input-wrap"><span>R$</span>
-              <input id="custo" placeholder="0,00" inputmode="decimal">
-            </div>
-          </label>
-          <label class="field">Nível
-            <select id="nivel">
-              <option value="5">5</option><option value="4">4</option>
-              <option value="3">3</option><option value="2">2</option><option value="1">1</option>
-            </select>
-          </label>
-        </div>
-        <p id="calc-feedback" class="calc-feedback">Preencha os campos para iniciar.</p>
-      </section>
+  <main>
+    <section class="panel">
+      <h2>Parâmetros da operação</h2>
+      <p class="panel-sub">Defina os dados do produto para calcular.</p>
+      <details open>
+        <summary>Como usar em 4 passos</summary>
+        <ol>
+          <li>Selecione o CNPJ e o peso.</li>
+          <li>Informe o custo do produto.</li>
+          <li>Preencha apenas um modo de cálculo.</li>
+          <li>Confira os resultados por marketplace.</li>
+        </ol>
+      </details>
+      <div class="controls-grid">
+        <label class="field">CNPJ
+          <select id="cnpj">
+            <option value="Selecione">Selecione...</option>
+            <option>LOJA DA VIVI LTDA</option>
+            <option>FERREIRA PROSPERITA COSMETICOS LTDA</option>
+            <option>RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA</option>
+            <option>VIVIANE CHRISTINA FERREIRA</option>
+          </select>
+        </label>
+        <label class="field">Peso
+          <select id="peso">
+            <option value="Selecione">Selecione...</option>
+            <option value="0.3">até 0.3kg</option>
+            <option value="0.5">0.3 a 0.5kg</option>
+            <option value="1">0.5 a 1kg</option>
+            <option value="2">1 a 2kg</option>
+            <option value="5">2 a 5kg</option>
+            <option value="9">5 a 9kg</option>
+            <option value="13">9 a 13kg</option>
+            <option value="17">13 a 17kg</option>
+            <option value="23">17 a 23kg</option>
+            <option value="30">23 a 30kg</option>
+          </select>
+        </label>
+        <label class="field">Custo
+          <div class="money-input-wrap"><span>R$</span><input id="custo" placeholder="0,00" inputmode="decimal"></div>
+        </label>
+        <label class="field">Nível
+          <select id="nivel">
+            <option value="5">5</option><option value="4">4</option>
+            <option value="3">3</option><option value="2">2</option><option value="1">1</option>
+          </select>
+        </label>
+      </div>
+      <p id="calc-feedback" class="calc-feedback">Preencha os campos para iniciar.</p>
+    </section>
 
-      <section class="panel">
-        <h2>Modos de cálculo</h2>
-        <p class="panel-sub">Escolha o modo e informe o valor.</p>
-        <div class="mode-grid">
-          <article class="mode-card">
-            <h3><span class="mode-badge manual"></span> Manual</h3>
-            <p>Informe o preço de venda para ver o líquido aproximado.</p>
-            <label class="field"><div class="money-input-wrap"><span>R$</span>
-              <input id="Manual" type="number" inputmode="decimal" placeholder="0,00"></div>
-            </label>
-          </article>
-          <article class="mode-card">
-            <h3><span class="mode-badge vl"></span> Valor líquido</h3>
-            <p>Informe quanto quer receber para obter o preço de venda.</p>
-            <label class="field"><div class="money-input-wrap"><span>R$</span>
-              <input id="ValorLiq" type="number" inputmode="decimal" placeholder="0,00"></div>
-            </label>
-          </article>
-          <article class="mode-card">
-            <h3><span class="mode-badge pct"></span> Percentual líquido</h3>
-            <p>Informe a margem em percentual para receber o preço sugerido.</p>
-            <label class="field"><div class="money-input-wrap">
-              <input id="PctLiq" type="number" inputmode="decimal" placeholder="0"><span>%</span></div>
-            </label>
-          </article>
-        </div>
-      </section>
+    <section class="panel">
+      <h2>Modos de cálculo</h2>
+      <p class="panel-sub">Escolha o modo e informe o valor.</p>
+      <div class="mode-grid">
+        <article class="mode-card">
+          <h3><span class="mode-badge manual"></span> Manual</h3>
+          <p>Informe o preço de venda para ver o líquido aproximado.</p>
+          <label class="field"><div class="money-input-wrap"><span>R$</span><input id="Manual" type="number" inputmode="decimal" placeholder="0,00"></div></label>
+        </article>
+        <article class="mode-card">
+          <h3><span class="mode-badge vl"></span> Valor líquido</h3>
+          <p>Informe quanto quer receber para obter o preço de venda.</p>
+          <label class="field"><div class="money-input-wrap"><span>R$</span><input id="ValorLiq" type="number" inputmode="decimal" placeholder="0,00"></div></label>
+        </article>
+        <article class="mode-card">
+          <h3><span class="mode-badge pct"></span> Percentual líquido</h3>
+          <p>Informe a margem em percentual para receber o preço sugerido.</p>
+          <label class="field"><div class="money-input-wrap"><input id="PctLiq" type="number" inputmode="decimal" placeholder="0"><span>%</span></div></label>
+        </article>
+      </div>
+    </section>
 
-      <section class="panel">
-        <h2>Resultados por marketplace</h2>
-        <p class="panel-sub">Comparativo completo por canal com os 3 modos de cálculo ativos.</p>
-        <div class="table-wrap">
-          <table class="results-table">
-            <thead>
-              <tr>
-                <th>Marketplace</th>
-                <th>Líquido aprox. no modo Manual</th>
-                <th>Sugestão de venda no modo Valor líquido</th>
-                <th>Sugestão de venda no modo Percentual líquido</th>
-              </tr>
-            </thead>
-            <tbody id="result-body"></tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+    <section class="panel">
+      <h2>Resultados por marketplace</h2>
+      <p class="panel-sub">Comparativo completo por canal com os 3 modos de cálculo ativos.</p>
+      <div class="table-wrap">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Marketplace</th>
+              <th>Líquido aprox. no modo Manual</th>
+              <th>Sugestão de venda no modo Valor líquido</th>
+              <th>Sugestão de venda no modo Percentual líquido</th>
+            </tr>
+          </thead>
+          <tbody id="result-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
-    <footer class="app-footer">
-      <p class="footer-kicker">Subsistemas Loja da Vivi</p>
-      <p class="footer-title">Calculadora de Marketplaces</p>
-      <p class="footer-text">Operação diária com foco em consistência de preço e agilidade.</p>
-    </footer>
-  </div>
+  <footer class="app-footer">
+    <p class="footer-kicker">Subsistemas Loja da Vivi</p>
+    <p class="footer-title">Calculadora de Marketplaces</p>
+    <p class="footer-text">Operação diária com foco em consistência de preço e agilidade.</p>
+  </footer>
+</div>
 
-  <!-- Navegação inferior -->
-  <nav class="nav-bar">
-    <a class="nav-item is-active" href="index.html">
-      <span class="nav-icon">🛒</span> Marketplace
-    </a>
-    <a class="nav-item" href="index.html">
-      <span class="nav-icon">💰</span> Caixa
-    </a>
-    <a class="nav-item" href="precos.html">
-      <span class="nav-icon">🏷️</span> Etiqueta
-    </a>
-    <a class="nav-item" href="precos.html">
-      <span class="nav-icon">📄</span> DANFE
-    </a>
-  </nav>
+<nav class="nav-bar">
+  <a class="nav-item is-active" href="index.html"><span class="nav-icon">🛒</span> Marketplace</a>
+  <a class="nav-item" href="caixa.html"><span class="nav-icon">💰</span> Caixa</a>
+  <a class="nav-item" href="etiqueta.html"><span class="nav-icon">🏷️</span> Etiqueta</a>
+  <a class="nav-item" href="danfe.html"><span class="nav-icon">📄</span> DANFE</a>
+</nav>
 
-  <script src="config.js"></script>
-  <script src="calculadora.js"></script>
-  <script>
-    // ---------- Última atualização (data/hora do último commit) ----------
-    // Busca a data do último commit no GitHub. Como o repositório é público,
-    // a API retorna a data sem precisar de senha. Atualiza sozinho.
-    (function () {
-      const textEl = document.getElementById("updated-text");
-      fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1")
-        .then((r) => r.json())
-        .then((data) => {
-          const commit = Array.isArray(data) ? data[0] : null;
-          if (!commit || !commit.commit) throw new Error("sem dados");
-          const d = new Date(commit.commit.committer.date);
-          const dataStr = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-          const horaStr = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-          textEl.textContent = "Última atualização: " + dataStr + " às " + horaStr;
-        })
-        .catch(() => {
-          textEl.textContent = "Última atualização: indisponível";
-        });
-    })();
-
-    // ---------- Tema ----------
-    const themeBtn = document.getElementById("toggle-dark-mode");
-    function applyTheme() {
-      const dark = document.documentElement.classList.toggle("dark-mode");
-      themeBtn.textContent = dark ? "☀️ Tema claro" : "🌙 Tema escuro";
-      localStorage.setItem("darkMode", dark ? "1" : "0");
-    }
-    if (localStorage.getItem("darkMode") === "1") document.documentElement.classList.add("dark-mode");
-    themeBtn.textContent = document.documentElement.classList.contains("dark-mode") ? "☀️ Tema claro" : "🌙 Tema escuro";
-    themeBtn.addEventListener("click", applyTheme);
-
-    // ---------- Linhas da tabela (ML separado em 2) ----------
-    const LINHAS = [
-      ["presencial", "PRESENCIAL", "classico"],
-      ["amazon", "AMAZON", "classico"],
-      ["casasBahia", "CASAS BAHIA", "classico"],
-      ["magalu", "MAGALU", "classico"],
-      ["mercadoLivre", "MERCADO LIVRE CLÁSSICO", "classico"],
-      ["mercadoLivre", "MERCADO LIVRE PREMIUM", "premium"],
-      ["olist", "OLIST", "classico"],
-      ["rd", "RD", "classico"],
-      ["shein", "SHEIN", "classico"],
-      ["shopee", "SHOPEE", "classico"],
-      ["temu", "TEMU", "classico"],
-      ["tiktok", "TIKTOK", "classico"],
-    ];
-
-    function parseNum(v) {
-      if (typeof v === "number") return v;
-      let s = String(v || "").trim().replace(/[^\d.,-]/g, "");
-      if (s.includes(".") && s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
-      else if (s.includes(",")) s = s.replace(",", ".");
-      return parseFloat(s) || 0;
-    }
-    function fmt(v) { return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
-
-    // ---------- Cálculo ----------
-    function calcular() {
-      const cnpj = document.getElementById("cnpj").value;
-      const pesoKg = parseNum(document.getElementById("peso").value);
-      const custo = parseNum(document.getElementById("custo").value);
-      const nivel = parseInt(document.getElementById("nivel").value) || 5;
-      const Manual = parseNum(document.getElementById("Manual").value);
-      const ValorLiq = parseNum(document.getElementById("ValorLiq").value);
-      const PctLiq = parseNum(document.getElementById("PctLiq").value);
-      const feedback = document.getElementById("calc-feedback");
-
-      if (cnpj === "Selecione") { feedback.dataset.state = "error"; feedback.textContent = "Selecione o CNPJ para iniciar."; return; }
-      if (pesoKg <= 0) { feedback.dataset.state = "error"; feedback.textContent = "Selecione a faixa de peso do produto."; return; }
-      if (!(custo > 0)) { feedback.dataset.state = "error"; feedback.textContent = "Informe um custo maior que zero."; return; }
-      if (!(Manual > 0 || ValorLiq > 0 || PctLiq > 0)) { feedback.dataset.state = "error"; feedback.textContent = "Preencha ao menos um modo de cálculo."; return; }
-
-      const tbody = document.getElementById("result-body");
-      tbody.innerHTML = "";
-      LINHAS.forEach(([canal, rotulo, plano]) => {
-        const res = calcularPreco({ custo, cnpj, nivel, pesoKg, plano, valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq });
-        const r = res[canal];
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<th class="marketplace-cell">${rotulo}</th>
-          <td class="result-cell">${Manual > 0 ? fmt(r.manual) : "—"}</td>
-          <td class="result-cell">${ValorLiq > 0 ? fmt(r.vliq) : "—"}</td>
-          <td class="result-cell">${PctLiq > 0 ? fmt(r.pct) : "—"}</td>`;
-        tbody.appendChild(tr);
-      });
-      feedback.dataset.state = "success";
-      feedback.textContent = "✅ Cálculo pronto. Resultados atualizados automaticamente.";
-    }
-
-    // ---------- Eventos ----------
-    ["cnpj", "peso", "custo", "nivel", "Manual", "ValorLiq", "PctLiq"].forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener(id === "nivel" || id === "cnpj" || id === "peso" ? "change" : "input", calcular);
-    });
-    document.getElementById("clear-calculation").addEventListener("click", () => {
-      ["custo", "Manual", "ValorLiq", "PctLiq"].forEach((id) => document.getElementById(id).value = "");
-      document.getElementById("cnpj").value = "Selecione";
-      document.getElementById("peso").value = "Selecione";
-      document.getElementById("nivel").value = "5";
-      document.getElementById("result-body").innerHTML = "";
-      document.getElementById("calc-feedback").dataset.state = "";
-      document.getElementById("calc-feedback").textContent = "Campos limpos. Preencha novamente para calcular.";
-    });
-  </script>
+<script>
+(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Última atualização: "+x.toLocaleDateString("pt-BR")+" às "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Última atualização: indisponível"})})();
+var tb=document.getElementById("toggle-dark-mode");
+function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"☀️ Tema claro":"🌙 Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
+if(localStorage.getItem("darkMode")==="1")document.documentElement.classList.add("dark-mode");
+tb.textContent=document.documentElement.classList.contains("dark-mode")?"☀️ Tema claro":"🌙 Tema escuro";
+tb.addEventListener("click",applyTheme);
+var LINHAS=[["presencial","PRESENCIAL","classico"],["amazon","AMAZON","classico"],["casasBahia","CASAS BAHIA","classico"],["magalu","MAGALU","classico"],["mercadoLivre","MERCADO LIVRE CLÁSSICO","classico"],["mercadoLivre","MERCADO LIVRE PREMIUM","premium"],["olist","OLIST","classico"],["rd","RD","classico"],["shein","SHEIN","classico"],["shopee","SHOPEE","classico"],["temu","TEMU","classico"],["tiktok","TIKTOK","classico"]];
+function parseNum(v){if(typeof v==="number")return v;var s=String(v||"").trim().replace(/[^\d.,-]/g,"");if(s.includes(".")&&s.includes(","))s=s.replace(/\./g,"").replace(",",".");else if(s.includes(","))s=s.replace(",",".");return parseFloat(s)||0}
+function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function calcular(){var cnpj=document.getElementById("cnpj").value;var pesoKg=parseNum(document.getElementById("peso").value);var custo=parseNum(document.getElementById("custo").value);var nivel=parseInt(document.getElementById("nivel").value)||5;var Manual=parseNum(document.getElementById("Manual").value);var ValorLiq=parseNum(document.getElementById("ValorLiq").value);var PctLiq=parseNum(document.getElementById("PctLiq").value);var fb=document.getElementById("calc-feedback");
+if(cnpj==="Selecione"){fb.dataset.state="error";fb.textContent="Selecione o CNPJ para iniciar.";return}
+if(pesoKg<=0){fb.dataset.state="error";fb.textContent="Selecione a faixa de peso do produto.";return}
+if(!(custo>0)){fb.dataset.state="error";fb.textContent="Informe um custo maior que zero.";return}
+if(!(Manual>0||ValorLiq>0||PctLiq>0)){fb.dataset.state="error";fb.textContent="Preencha ao menos um modo de cálculo.";return}
+var tb2=document.getElementById("result-body");tb2.innerHTML="";
+LINHAS.forEach(function(l){var res=calcularPreco({custo:custo,cnpj:cnpj,nivel:nivel,pesoKg:pesoKg,plano:l[2],valorManual:Manual,valorLiq:ValorLiq,pctLiq:PctLiq});var r=res[l[0]];var tr=document.createElement("tr");tr.innerHTML='<th class="marketplace-cell">'+l[1]+'</th><td class="result-cell">'+(Manual>0?fmt(r.manual):"—")+'</td><td class="result-cell">'+(ValorLiq>0?fmt(r.vliq):"—")+'</td><td class="result-cell">'+(PctLiq>0?fmt(r.pct):"—")+'</td>';tb2.appendChild(tr)});
+fb.dataset.state="success";fb.textContent="✅ Cálculo pronto. Resultados atualizados automaticamente."}
+["cnpj","peso","custo","nivel","Manual","ValorLiq","PctLiq"].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener(id==="nivel"||id==="cnpj"||id==="peso"?"change":"input",calcular)});
+document.getElementById("clear-calculation").addEventListener("click",function(){["custo","Manual","ValorLiq","PctLiq"].forEach(function(id){document.getElementById(id).value=""});document.getElementById("cnpj").value="Selecione";document.getElementById("peso").value="Selecione";document.getElementById("nivel").value="5";document.getElementById("result-body").innerHTML="";var fb=document.getElementById("calc-feedback");fb.dataset.state="";fb.textContent="Campos limpos. Preencha novamente para calcular."});
+</script>
 </body>
 </html>
