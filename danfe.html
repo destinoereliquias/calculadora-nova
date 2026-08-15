@@ -11,7 +11,6 @@
 body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
 .wrap{max-width:1000px;margin:0 auto;padding:24px;padding-bottom:90px}
 .app-header{background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;padding:24px 28px;color:#fff;display:flex;align-items:center;gap:18px;position:relative;overflow:hidden}
-.app-header::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;background:rgba(255,255,255,.12);border-radius:50%}
 .mascot{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #fff;background:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .header-text{flex:1;position:relative;z-index:2}
 .eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:.7rem;opacity:.9;margin:0}
@@ -35,14 +34,17 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
 .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
 .money-input-wrap{display:flex;align-items:center;gap:6px}
 .money-input-wrap span{color:var(--muted);font-weight:600}
-/* DANFE preview */
+.file-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px}
+.file-name{color:var(--muted);font-size:.85rem}
+.info-msg{font-size:.85rem;color:var(--ok);margin:10px 0 0;min-height:18px}
+.info-msg.err{color:var(--danger)}
 .danfe{background:#fff;color:#111;border:2px solid #111;border-radius:8px;padding:16px;font-size:.82rem;max-width:760px;margin:0 auto}
 .danfe-head{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
 .danfe-title{font-size:1.15rem;font-weight:800;letter-spacing:1px}
 .danfe-sub{font-size:.72rem;color:#333}
 .danfe-top{display:flex;gap:14px;margin-bottom:12px}
 .danfe-qr{width:110px;height:110px;border:1px solid #111;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:.6rem;color:#555;flex-shrink:0}
-.danfe-chave{flex:1;border:1px solid #111;padding:10px;font-size:.78rem}
+.danfe-chave{flex:1;border:1px solid #111;padding:10px;font-size:.78rem;word-break:break-all}
 .danfe-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .dbox{border:1px solid #111;padding:8px;display:flex;flex-direction:column;gap:2px}
 .dbox b{font-size:.72rem;text-transform:uppercase}
@@ -69,57 +71,78 @@ body *{visibility:hidden}
     <div class="header-text">
       <p class="eyebrow">✦ Subsistema interno</p>
       <h1>DANFE Simplificada</h1>
-      <p class="subtitle">Gere o documento auxiliar da nota fiscal eletrônica para impressão.</p>
-      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando última atualização...</span></span>
+      <p class="subtitle">Importe o XML da NF-e, confira e salve como PDF.</p>
+      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando ultima atualizacao...</span></span>
       <div class="header-actions">
-        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">🌙 Tema escuro</button>
-        <button id="btn-print" class="btn btn-pink" type="button">🖨️ Imprimir DANFE</button>
+        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">Tema escuro</button>
+        <button id="btn-print" class="btn btn-pink" type="button">Salvar PDF / Imprimir</button>
       </div>
     </div>
   </header>
 
   <main>
     <section class="panel">
+      <h2>Importar NF-e (XML)</h2>
+      <p class="panel-sub">Escolha o arquivo XML da nota. Os dados do emitente, destinatario, produtos e valores sao preenchidos automaticamente.</p>
+      <label class="field">Arquivo XML da nota
+        <div class="file-row">
+          <input id="xml-input" type="file" accept=".xml">
+          <span class="file-name" id="file-name">Nenhum arquivo escolhido</span>
+        </div>
+      </label>
+      <p id="info-msg" class="info-msg"></p>
+    </section>
+
+    <section class="panel">
       <h2>Dados da nota</h2>
-      <p class="panel-sub">Preencha os dados para gerar a DANFE simplificada.</p>
-      <div class="controls-grid">
-        <label class="field">Número da NF
-          <input id="numNota" placeholder="000001">
-        </label>
-        <label class="field">Data de emissão
-          <input id="data" type="date">
-        </label>
-        <label class="field">Natureza da operação
-          <input id="natureza" value="VENDA DE COSMÉTICOS">
-        </label>
-      </div>
+      <p class="panel-sub">Confira e ajuste os dados antes de gerar o PDF.</p>
       <h3 class="sub-h">Emitente</h3>
       <div class="controls-grid">
-        <label class="field">Razão social
-          <input id="emitRazao" placeholder="LOJA DA VIVI LTDA">
+        <label class="field">Razao Social (empresas cadastradas)
+          <select id="empresa-select">
+            <option value="">Selecione uma empresa cadastrada...</option>
+            <option value="Loja da Vivi Ltda|32.519.260/0001-64">Loja da Vivi Ltda - 32.519.260/0001-64</option>
+            <option value="Ferreira Prosperita Cosmeticos LTDA|47.906.429/0001-64">Ferreira Prosperita Cosmeticos LTDA - 47.906.429/0001-64</option>
+            <option value="Rav Shefa Distribuidora de Cosmeticos Ltda|22.694.612/0001-06">Rav Shefa Distribuidora de Cosmeticos Ltda - 22.694.612/0001-06</option>
+            <option value="Viviane Christina Ferreira|27.680.632/0001-08">Viviane Christina Ferreira - 27.680.632/0001-08</option>
+          </select>
+        </label>
+      </div>
+      <div class="controls-grid">
+        <label class="field">Razao Social
+          <input id="emitRazao" placeholder="Razao social">
         </label>
         <label class="field">CNPJ
           <input id="emitCnpj" placeholder="00.000.000/0001-00">
         </label>
       </div>
-      <label class="field">Endereço do emitente
-        <input id="emitEnd" placeholder="Rua, número, bairro, cidade/UF">
+      <label class="field">Endereco do emitente
+        <input id="emitEnd" placeholder="Rua, numero, bairro, cidade/UF">
       </label>
-      <h3 class="sub-h">Destinatário</h3>
+
+      <h3 class="sub-h">Destinatario</h3>
       <div class="controls-grid">
-        <label class="field">Nome / Razão social
+        <label class="field">Nome / Razao social
           <input id="destNome">
         </label>
         <label class="field">CNPJ/CPF
           <input id="destDoc">
         </label>
       </div>
-      <label class="field">Endereço do destinatário
+      <label class="field">Endereco do destinatario
         <input id="destEnd">
       </label>
+
+      <h3 class="sub-h">Nota</h3>
       <div class="controls-grid">
-        <label class="field">Produto / descrição
-          <input id="descricao" placeholder="COSMÉTICOS DIVERSOS">
+        <label class="field">Numero da NF
+          <input id="numNota" placeholder="000001">
+        </label>
+        <label class="field">Data de emissao
+          <input id="data" type="date">
+        </label>
+        <label class="field">Natureza da operacao
+          <input id="natureza" value="VENDA DE COSMETICOS">
         </label>
         <label class="field">Valor total (R$)
           <div class="money-input-wrap"><span>R$</span><input id="valorTotal" inputmode="decimal"></div>
@@ -128,26 +151,37 @@ body *{visibility:hidden}
     </section>
 
     <section class="panel">
-      <h2>Prévia da DANFE</h2>
-      <p class="panel-sub">Confira antes de imprimir.</p>
+      <h2>Produtos</h2>
+      <p class="panel-sub">Itens da nota importada (ou adicione manualmente).</p>
+      <div class="table-wrap" style="overflow-x:auto;">
+        <table class="danfe-table" style="margin-bottom:0;">
+          <thead><tr><th>Produto</th><th>Qtd</th><th>Valor unit.</th><th>Valor total</th></tr></thead>
+          <tbody id="produtos-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Previa da DANFE</h2>
+      <p class="panel-sub">Confira antes de salvar como PDF.</p>
       <div class="danfe" id="danfe">
         <div class="danfe-head">
           <div class="danfe-title">DANFE SIMPLIFICADA</div>
-          <div class="danfe-sub">Documento Auxiliar da Nota Fiscal Eletrônica</div>
+          <div class="danfe-sub">Documento Auxiliar da Nota Fiscal Eletronica</div>
         </div>
         <div class="danfe-top">
-          <div class="danfe-qr">QR CODE<br><span>(código da SEFAZ)</span></div>
-          <div class="danfe-chave"><b>Chave de acesso:</b><br><span id="d-chave">[gerada após autorização SEFAZ]</span><br><br><b>Protocolo de autorização:</b><br><span id="d-prot">[preencher após autorização]</span></div>
+          <div class="danfe-qr">QR CODE<br><span>(codigo da SEFAZ)</span></div>
+          <div class="danfe-chave"><b>Chave de acesso:</b><br><span id="d-chave">[gerada apos autorizacao SEFAZ]</span><br><br><b>Protocolo de autorizacao:</b><br><span id="d-prot">[preencher apos autorizacao]</span></div>
         </div>
         <div class="danfe-grid">
           <div class="dbox"><b>Emitente</b><span id="d-emit">—</span><span id="d-emitCnpj">—</span><span id="d-emitEnd">—</span></div>
-          <div class="dbox"><b>Destinatário</b><span id="d-dest">—</span><span id="d-destDoc">—</span><span id="d-destEnd">—</span></div>
+          <div class="dbox"><b>Destinatario</b><span id="d-dest">—</span><span id="d-destDoc">—</span><span id="d-destEnd">—</span></div>
         </div>
         <table class="danfe-table">
-          <tr><th>NF</th><th>Data</th><th>Natureza da operação</th><th>Valor total</th></tr>
+          <tr><th>NF</th><th>Data</th><th>Natureza da operacao</th><th>Valor total</th></tr>
           <tr><td id="d-num">—</td><td id="d-data">—</td><td id="d-nat">—</td><td id="d-valor">—</td></tr>
         </table>
-        <div class="danfe-obs">Documento auxiliar para conferência. A validade fiscal depende da autorização da SEFAZ. Preencha a chave de acesso e o protocolo após a emissão autorizada da NF-e.</div>
+        <div class="danfe-obs">Documento auxiliar para conferencia. A validade fiscal depende da autorizacao da SEFAZ. Preencha a chave de acesso e o protocolo apos a emissao autorizada da NF-e.</div>
       </div>
     </section>
   </main>
@@ -161,29 +195,166 @@ body *{visibility:hidden}
 </nav>
 
 <script>
-(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Última atualização: "+x.toLocaleDateString("pt-BR")+" às "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Última atualização: indisponível"})})();
+(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Ultima atualizacao: "+x.toLocaleDateString("pt-BR")+" as "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Ultima atualizacao: indisponivel"})})();
 var tb=document.getElementById("toggle-dark-mode");
-function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"☀️ Tema claro":"🌙 Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
+function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"Tema claro":"Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
 if(localStorage.getItem("darkMode")==="1")document.documentElement.classList.add("dark-mode");
-tb.textContent=document.documentElement.classList.contains("dark-mode")?"☀️ Tema claro":"🌙 Tema escuro";
+tb.textContent=document.documentElement.classList.contains("dark-mode")?"Tema claro":"Tema escuro";
 tb.addEventListener("click",applyTheme);
+
 function val(id){return document.getElementById(id).value}
 function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function atualizar(){
-document.getElementById("d-emit").textContent=val("emitRazao")||"—";
-document.getElementById("d-emitCnpj").textContent=val("emitCnpj")?("CNPJ: "+val("emitCnpj")):"—";
-document.getElementById("d-emitEnd").textContent=val("emitEnd")||"—";
-document.getElementById("d-dest").textContent=val("destNome")||"—";
-document.getElementById("d-destDoc").textContent=val("destDoc")?("Doc: "+val("destDoc")):"—";
-document.getElementById("d-destEnd").textContent=val("destEnd")||"—";
-document.getElementById("d-num").textContent=val("numNota")||"—";
-var dt=val("data");document.getElementById("d-data").textContent=dt?dt.split("-").reverse().join("/"):"—";
-document.getElementById("d-nat").textContent=val("natureza")||"—";
-var v=parseFloat(String(val("valorTotal")).replace(/\./g,"").replace(",","."))||0;
-document.getElementById("d-valor").textContent=v>0?fmt(v):"—";
+function esc(t){return String(t==null?"":t).replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+
+var produtos=[];
+
+// Empresas cadastradas: ao selecionar, preenche razao e CNPJ
+document.getElementById("empresa-select").addEventListener("change",function(){
+  var v=document.getElementById("empresa-select").value;
+  if(!v)return;
+  var partes=v.split("|");
+  document.getElementById("emitRazao").value=partes[0];
+  document.getElementById("emitCnpj").value=partes[1];
+  atualizarPrevia();
+});
+
+function atualizarPrevia(){
+  document.getElementById("d-emit").textContent=val("emitRazao")||"—";
+  document.getElementById("d-emitCnpj").textContent=val("emitCnpj")?("CNPJ: "+val("emitCnpj")):"—";
+  document.getElementById("d-emitEnd").textContent=val("emitEnd")||"—";
+  document.getElementById("d-dest").textContent=val("destNome")||"—";
+  document.getElementById("d-destDoc").textContent=val("destDoc")?("Doc: "+val("destDoc")):"—";
+  document.getElementById("d-destEnd").textContent=val("destEnd")||"—";
+  document.getElementById("d-num").textContent=val("numNota")||"—";
+  var dt=val("data");
+  document.getElementById("d-data").textContent=dt?dt.split("-").reverse().join("/"):"—";
+  document.getElementById("d-nat").textContent=val("natureza")||"—";
+  var v=parseFloat(String(val("valorTotal")).replace(/\./g,"").replace(",","."))||0;
+  document.getElementById("d-valor").textContent=v>0?fmt(v):"—";
+  // Produtos
+  var tb2=document.getElementById("produtos-body");
+  tb2.innerHTML="";
+  if(produtos.length===0){
+    tb2.innerHTML='<tr><td colspan="4" style="color:#888;">Nenhum produto importado.</td></tr>';
+  }else{
+    produtos.forEach(function(p){
+      var tr=document.createElement("tr");
+      tr.innerHTML='<td>'+esc(p.nome)+'</td><td>'+p.qtd+'</td><td>'+fmt(p.uni)+'</td><td>'+fmt(p.total)+'</td>';
+      tb2.appendChild(tr);
+    });
+  }
 }
-["numNota","data","natureza","emitRazao","emitCnpj","emitEnd","destNome","destDoc","destEnd","descricao","valorTotal"].forEach(function(id){document.getElementById(id).addEventListener("input",atualizar)});
-document.getElementById("btn-print").addEventListener("click",function(){window.print()});
+
+["emitRazao","emitCnpj","emitEnd","destNome","destDoc","destEnd","numNota","data","natureza","valorTotal"].forEach(function(id){
+  document.getElementById(id).addEventListener("input",atualizarPrevia);
+});
+
+// Importa o XML da NF-e
+document.getElementById("xml-input").addEventListener("change",function(e){
+  var file=e.target.files[0];
+  if(!file)return;
+  document.getElementById("file-name").textContent=file.name;
+  var info=document.getElementById("info-msg");
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var xml=new DOMParser().parseFromString(String(ev.target.result),"text/xml");
+      if(xml.getElementsByTagName("parsererror").length)throw new Error("XML invalido");
+      preencherDoXML(xml);
+      info.className="info-msg";
+      info.textContent="XML importado com sucesso. Confira os dados abaixo.";
+    }catch(err){
+      info.className="info-msg err";
+      info.textContent="Nao foi possivel ler o XML: "+err.message;
+    }
+  };
+  reader.readAsText(file);
+});
+
+function tag(el,nome){
+  var n=el.getElementsByTagName(nome);
+  return n&&n.length?(n[0].textContent||"").trim():"";
+}
+
+function preencherDoXML(xml){
+  var infNFe=xml.getElementsByTagName("infNFe")[0];
+  if(!infNFe)throw new Error("infNFe nao encontrado");
+  var ide=infNFe.getElementsByTagName("ide")[0];
+  var emit=infNFe.getElementsByTagName("emit")[0];
+  var dest=infNFe.getElementsByTagName("dest")[0];
+  var total=infNFe.getElementsByTagName("ICMSTot")[0];
+
+  // Chave de acesso (atributo Id do infNFe)
+  var chave=infNFe.getAttribute("Id")||"";
+  if(chave.indexOf("NFe")===0)chave=chave.slice(3);
+  document.getElementById("d-chave").textContent=chave||"[nao encontrada no XML]";
+
+  // Protocolo
+  var prot=xml.getElementsByTagName("nProt");
+  document.getElementById("d-prot").textContent=prot&&prot.length?prot[0].textContent.trim():val("d-prot")||"[sem protocolo no XML]";
+
+  // Numero e data
+  var num=tag(ide,"nNF");
+  if(num)document.getElementById("numNota").value=num;
+  var dh=tag(ide,"dhEmi")||tag(ide,"dEmi");
+  if(dh){
+    var d=new Date(dh);
+    if(!isNaN(d.getTime()))document.getElementById("data").value=d.toISOString().split("T")[0];
+  }
+  var nat=tag(ide,"natOp");
+  if(nat)document.getElementById("natureza").value=nat;
+
+  // Emitente
+  if(emit){
+    var r=tag(emit,"xNome");if(r)document.getElementById("emitRazao").value=r;
+    var c=tag(emit,"CNPJ");if(c)document.getElementById("emitCnpj").value=formatarCNPJ(c);
+    var ee=emit.getElementsByTagName("enderEmit")[0];
+    if(ee){
+      var end=(tag(ee,"xLgr")+" "+tag(ee,"nro")).trim()+", "+tag(ee,"xBairro")+", "+tag(ee,"xMun")+"/"+tag(ee,"UF");
+      document.getElementById("emitEnd").value=end.replace(/\s+/g," ").trim();
+    }
+  }
+
+  // Destinatario
+  if(dest){
+    var dn=tag(dest,"xNome");if(dn)document.getElementById("destNome").value=dn;
+    var dc=tag(dest,"CNPJ")||tag(dest,"CPF");if(dc)document.getElementById("destDoc").value=formatarCNPJ(dc);
+    var ed=dest.getElementsByTagName("enderDest")[0];
+    if(ed){
+      var dend=(tag(ed,"xLgr")+" "+tag(ed,"nro")).trim()+", "+tag(ed,"xBairro")+", "+tag(ed,"xMun")+"/"+tag(ed,"UF");
+      document.getElementById("destEnd").value=dend.replace(/\s+/g," ").trim();
+    }
+  }
+
+  // Valor total
+  var vNF=tag(total,"vNF");
+  if(vNF)document.getElementById("valorTotal").value=vNF.replace(".",",");
+
+  // Produtos
+  produtos=[];
+  var dets=infNFe.getElementsByTagName("det");
+  for(var i=0;i<dets.length;i++){
+    var prod=dets[i].getElementsByTagName("prod")[0];
+    if(!prod)continue;
+    var nome=tag(prod,"xProd");
+    var qtd=parseFloat(tag(prod,"qCom"))||0;
+    var uni=parseFloat(tag(prod,"vUnCom"))||0;
+    var totalP=parseFloat(tag(prod,"vProd"))||0;
+    produtos.push({nome:nome,qtd:qtd,uni:uni,total:totalP});
+  }
+
+  atualizarPrevia();
+}
+
+function formatarCNPJ(v){
+  var s=String(v).replace(/[^\d]/g,"");
+  if(s.length===14)return s.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,"$1.$2.$3/$4-$5");
+  if(s.length===11)return s.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4");
+  return v;
+}
+
+document.getElementById("btn-print").addEventListener("click",function(){atualizarPrevia();window.print()});
+atualizarPrevia();
 </script>
 </body>
 </html>
