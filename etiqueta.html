@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Etiquetas Promocionais - Loja da Vivi</title>
+<title>Gerador de Etiquetas - Loja da Vivi</title>
 <style>
 :root{--bg:#fdf2f8;--surface:#fff;--text:#4a1d33;--muted:#a06b87;--border:#f8d7e8;--primary:#db2777;--primary-dark:#be185d;--primary-light:#fce7f3;--accent:#f472b6;--ok:#10b981;--danger:#ef4444;--shadow:0 4px 20px rgba(219,39,119,.10)}
 .dark-mode{--bg:#160b12;--surface:#231220;--text:#f3e3ec;--muted:#b489a0;--border:#3a2230;--primary:#f472b6;--primary-dark:#ec4899;--primary-light:#3a2230;--accent:#f9a8d4;--ok:#34d399;--danger:#f87171;--shadow:0 4px 20px rgba(0,0,0,.4)}
@@ -11,7 +11,6 @@
 body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
 .wrap{max-width:1000px;margin:0 auto;padding:24px;padding-bottom:90px}
 .app-header{background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;padding:24px 28px;color:#fff;display:flex;align-items:center;gap:18px;position:relative;overflow:hidden}
-.app-header::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;background:rgba(255,255,255,.12);border-radius:50%}
 .mascot{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #fff;background:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .header-text{flex:1;position:relative;z-index:2}
 .eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:.7rem;opacity:.9;margin:0}
@@ -28,29 +27,26 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;margin-top:18px;box-shadow:var(--shadow)}
 .panel h2{margin:0 0 4px;font-size:1.1rem}
 .panel-sub{color:var(--muted);font-size:.85rem;margin:0 0 16px}
-.controls-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.controls-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .field{display:flex;flex-direction:column;gap:6px;font-size:.82rem;font-weight:600}
-.field input,.field select,.field textarea{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:.95rem;font-weight:400;transition:border-color .15s,box-shadow .15s}
-.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
-.money-input-wrap{display:flex;align-items:center;gap:6px}
-.money-input-wrap span{color:var(--muted);font-weight:600}
-.label-preview{margin-top:18px;display:flex;justify-content:center}
-.label-card{width:300px;background:#fff;border:2px solid var(--primary);border-radius:14px;padding:18px;text-align:center;color:#4a1d33;box-shadow:var(--shadow)}
-.lc-logo{font-weight:800;color:var(--primary);letter-spacing:1px;font-size:.8rem;text-transform:uppercase}
-.lc-name{font-size:1.05rem;font-weight:700;margin:10px 0 14px;min-height:44px}
-.lc-de{color:var(--muted);font-size:.85rem;text-decoration:line-through}
-.lc-por{color:var(--primary-dark);font-size:1.9rem;font-weight:800;margin-top:2px}
-.lc-note{font-size:.72rem;color:var(--muted);margin-top:10px;border-top:1px dashed var(--border);padding-top:8px}
-.print-area{display:none}
+.field input,.field select{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:.95rem;font-weight:400;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.file-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px}
+.file-name{color:var(--muted);font-size:.85rem}
+.info-msg{font-size:.85rem;color:var(--ok);margin:10px 0 0;min-height:18px}
+.info-msg.err{color:var(--danger)}
+.preview-grid{display:grid;gap:6px;margin-top:12px}
+.plabel{border:2px solid var(--primary);border-radius:8px;padding:8px;text-align:center;background:#fff;color:#4a1d33;page-break-inside:avoid}
+.plabel.bw{border-color:#000;color:#000}
+.p-logo{font-weight:800;font-size:9px;letter-spacing:.5px}
+.p-name{font-size:10px;font-weight:700;margin:4px 0;min-height:24px;word-break:break-word}
+.p-de{font-size:9px;text-decoration:line-through;color:#888}
+.p-por{font-size:15px;font-weight:800;margin-top:2px}
 @media print{
 body *{visibility:hidden}
-.print-area,.print-area *{visibility:visible}
-.print-area{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:absolute;left:0;top:0;width:100%;padding:10px}
-.plabel{width:100%;border:2px solid #000;border-radius:10px;padding:10px;text-align:center;page-break-inside:avoid}
-.p-logo{font-weight:800;font-size:10px;color:#000}
-.p-name{font-size:11px;font-weight:700;margin:6px 0}
-.p-de{font-size:10px;text-decoration:line-through}
-.p-por{font-size:22px;font-weight:800}
+#print-area,#print-area *{visibility:visible}
+#print-area{display:block;position:absolute;left:0;top:0;width:210mm;padding:5mm}
+.print-ready{display:grid;gap:2mm}
 }
 .nav-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:center;gap:8px;padding:10px 16px;z-index:40;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 14px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer;text-decoration:none;transition:background .15s,color .15s}
@@ -65,53 +61,52 @@ body *{visibility:hidden}
     <img src="mascote.jpg" alt="Mascote Loja da Vivi" class="mascot">
     <div class="header-text">
       <p class="eyebrow">✦ Subsistema interno</p>
-      <h1>Etiquetas Promocionais</h1>
-      <p class="subtitle">Crie etiquetas de promoção para imprimir e colar nos produtos.</p>
-      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando última atualização...</span></span>
+      <h1>Tabela de Precos em A4</h1>
+      <p class="subtitle">Importe planilha XLS/CSV e gere etiquetas em grade.</p>
+      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando ultima atualizacao...</span></span>
       <div class="header-actions">
-        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">🌙 Tema escuro</button>
-        <button id="btn-print" class="btn btn-pink" type="button">🖨️ Imprimir etiquetas</button>
+        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">Tema escuro</button>
+        <button id="btn-print" class="btn btn-pink" type="button">Imprimir</button>
       </div>
     </div>
   </header>
 
   <main>
     <section class="panel">
-      <h2>Dados da etiqueta</h2>
-      <p class="panel-sub">Preencha as informações do produto em promoção.</p>
+      <h2>Importar planilha</h2>
+      <p class="panel-sub">Fluxo: importar arquivo, escolher modelo e imprimir. O arquivo deve ter colunas Produto, De e Por (ou usar a 1a coluna como produto, 2a como preco De, 3a como preco Por).</p>
       <div class="controls-grid">
-        <label class="field">Nome do produto
-          <input id="produto" placeholder="Ex: Batom Matte Vermelho">
+        <label class="field">Escolher arquivo (XLS/CSV)
+          <div class="file-row">
+            <input id="file-input" type="file" accept=".csv,.xls,.xlsx,.txt">
+            <span class="file-name" id="file-name">Nenhum arquivo escolhido</span>
+          </div>
         </label>
-        <label class="field">Preço "De" (R$)
-          <div class="money-input-wrap"><span>R$</span><input id="precoDe" inputmode="decimal" placeholder="0,00"></div>
+        <label class="field">Modelo da etiqueta
+          <select id="modelo">
+            <option value="3c-c">3x3cm Colorido</option>
+            <option value="3c-bw">3x3cm Preto e Branco</option>
+            <option value="5c-c" selected>5x3cm Colorido</option>
+            <option value="5c-bw">5x3cm Preto e Branco</option>
+          </select>
         </label>
-        <label class="field">Preço "Por" (R$)
-          <div class="money-input-wrap"><span>R$</span><input id="precoPor" inputmode="decimal" placeholder="0,00"></div>
-        </label>
-        <label class="field">Quantidade de etiquetas
-          <input id="qtd" type="number" min="1" value="1">
-        </label>
+      </div>
+      <p id="info-msg" class="info-msg"></p>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="btn-adicionar-manual" class="btn btn-outline" type="button">+ Adicionar item manual</button>
+        <button id="btn-limpar" class="btn btn-outline" type="button">Limpar itens</button>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Prévia da etiqueta</h2>
-      <p class="panel-sub">É assim que a etiqueta vai ficar.</p>
-      <div class="label-preview">
-        <div class="label-card">
-          <div class="lc-logo">💄 Loja da Vivi</div>
-          <div class="lc-name" id="pv-nome">Nome do produto</div>
-          <div class="lc-de" id="pv-de"></div>
-          <div class="lc-por" id="pv-por">POR R$ 0,00</div>
-          <div class="lc-note">Oferta válida enquanto durar o estoque</div>
-        </div>
-      </div>
+      <h2>Pre-visualizacao</h2>
+      <p class="panel-sub">Etiquetas geradas a partir do arquivo importado.</p>
+      <div class="preview-grid" id="preview"></div>
     </section>
   </main>
 </div>
 
-<div class="print-area" id="print-area"></div>
+<div id="print-area"></div>
 
 <nav class="nav-bar">
   <a class="nav-item" href="index.html"><span class="nav-icon">🛒</span> Marketplace</a>
@@ -121,18 +116,150 @@ body *{visibility:hidden}
 </nav>
 
 <script>
-(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Última atualização: "+x.toLocaleDateString("pt-BR")+" às "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Última atualização: indisponível"})})();
+(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Ultima atualizacao: "+x.toLocaleDateString("pt-BR")+" as "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Ultima atualizacao: indisponivel"})})();
 var tb=document.getElementById("toggle-dark-mode");
-function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"☀️ Tema claro":"🌙 Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
+function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"Tema claro":"Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
 if(localStorage.getItem("darkMode")==="1")document.documentElement.classList.add("dark-mode");
-tb.textContent=document.documentElement.classList.contains("dark-mode")?"☀️ Tema claro":"🌙 Tema escuro";
+tb.textContent=document.documentElement.classList.contains("dark-mode")?"Tema claro":"Tema escuro";
 tb.addEventListener("click",applyTheme);
-function parseNum(v){if(typeof v==="number")return v;var s=String(v||"").trim().replace(/[^\d.,-]/g,"");if(s.includes(".")&&s.includes(","))s=s.replace(/\./g,"").replace(",",".");else if(s.includes(","))s=s.replace(",",".");return parseFloat(s)||0}
+
 function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function atualizarPrevia(){var nome=document.getElementById("produto").value||"Nome do produto";var de=parseNum(document.getElementById("precoDe").value);var por=parseNum(document.getElementById("precoPor").value);document.getElementById("pv-nome").textContent=nome;document.getElementById("pv-de").textContent=de>0?"De "+fmt(de):"";document.getElementById("pv-por").textContent=por>0?"POR "+fmt(por):"POR R$ 0,00"}
-document.getElementById("produto").addEventListener("input",atualizarPrevia);
-["precoDe","precoPor"].forEach(function(id){document.getElementById(id).addEventListener("input",atualizarPrevia)});
-document.getElementById("btn-print").addEventListener("click",function(){var nome=document.getElementById("produto").value||"Produto";var de=parseNum(document.getElementById("precoDe").value);var por=parseNum(document.getElementById("precoPor").value);var qtd=parseInt(document.getElementById("qtd").value)||1;if(qtd<1)qtd=1;if(qtd>99)qtd=99;var area=document.getElementById("print-area");area.innerHTML="";for(var i=0;i<qtd;i++){var d=document.createElement("div");d.className="plabel";d.innerHTML='<div class="p-logo">LOJA DA VIVI</div><div class="p-name">'+nome.replace(/</g,"&lt;")+'</div><div class="p-de">'+(de>0?"De "+fmt(de):"")+'</div><div class="p-por">'+(por>0?"POR "+fmt(por):"")+'</div>';area.appendChild(d)}window.print()});
+function parseNum(s){s=String(s||"").trim().replace(/[^\d.,-]/g,"");if(s.indexOf(".")!==-1&&s.indexOf(",")!==-1)s=s.replace(/\./g,"").replace(",",".");else if(s.indexOf(",")!==-1)s=s.replace(",",".");return parseFloat(s)||0}
+function esc(t){return String(t==null?"":t).replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+
+var itens=[];
+
+// Monta a grade de pre-visualizacao
+function renderizar(){
+  var prev=document.getElementById("preview");
+  prev.innerHTML="";
+  var modelo=document.getElementById("modelo").value;
+  var cols=modelo.indexOf("5c")===0?4:6;
+  prev.style.gridTemplateColumns="repeat("+cols+",1fr)";
+  if(itens.length===0){
+    prev.innerHTML='<p style="color:var(--muted);font-size:.85rem;">Nenhum item ainda. Importe um arquivo ou adicione manualmente.</p>';
+    return;
+  }
+  var bw=modelo.indexOf("bw")!==-1;
+  itens.forEach(function(it){
+    var d=document.createElement("div");
+    d.className="plabel"+(bw?" bw":"");
+    d.innerHTML='<div class="p-logo">LOJA DA VIVI</div><div class="p-name">'+esc(it.nome)+'</div>'+
+      (it.de>0?'<div class="p-de">De '+fmt(it.de)+'</div>':'')+
+      '<div class="p-por">'+(it.por>0?"POR "+fmt(it.por):"")+'</div>';
+    prev.appendChild(d);
+  });
+}
+
+// Monta a grade de impressao (A4)
+function gerarImpressao(){
+  var area=document.getElementById("print-area");
+  area.innerHTML="";
+  if(itens.length===0){alert("Adicione itens antes de imprimir.");return;}
+  var modelo=document.getElementById("modelo").value;
+  var cols=modelo.indexOf("5c")===0?4:6;
+  var bw=modelo.indexOf("bw")!==-1;
+  var wrap=document.createElement("div");
+  wrap.className="print-ready";
+  wrap.style.gridTemplateColumns="repeat("+cols+",1fr)";
+  itens.forEach(function(it){
+    var d=document.createElement("div");
+    d.className="plabel"+(bw?" bw":"");
+    d.innerHTML='<div class="p-logo">LOJA DA VIVI</div><div class="p-name">'+esc(it.nome)+'</div>'+
+      (it.de>0?'<div class="p-de">De '+fmt(it.de)+'</div>':'')+
+      '<div class="p-por">'+(it.por>0?"POR "+fmt(it.por):"")+'</div>';
+    wrap.appendChild(d);
+  });
+  area.appendChild(wrap);
+}
+
+// Le o arquivo (CSV ou XLS/XLSX)
+document.getElementById("file-input").addEventListener("change",function(e){
+  var file=e.target.files[0];
+  if(!file)return;
+  document.getElementById("file-name").textContent=file.name;
+  var info=document.getElementById("info-msg");
+  info.className="info-msg";
+  var nome=file.name.toLowerCase();
+  var reader=new FileReader();
+  if(nome.indexOf(".csv")!==-1||nome.indexOf(".txt")!==-1){
+    reader.onload=function(ev){
+      var linhas=String(ev.target.result).split(/\r?\n/).filter(function(l){return l.trim()!==""});
+      processarCSV(linhas);
+    };
+    reader.readAsText(file);
+  }else{
+    reader.onload=function(ev){
+      var dados=processarXLSX(new Uint8Array(ev.target.result));
+      if(dados)processarLinhas(dados);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+});
+
+function processarCSV(linhas){
+  var sep=linhas[0].indexOf(";")!==-1?";":",";
+  var dados=linhas.map(function(l){return l.split(sep).map(function(c){return c.replace(/^"|"$/g,"").trim()})});
+  processarLinhas(dados);
+}
+
+function processarXLSX(bytes){
+  if(typeof XLSX==="undefined"){
+    document.getElementById("info-msg").className="info-msg err";
+    document.getElementById("info-msg").textContent="Para arquivos .xlsx e necessario internet para carregar o leitor. Use .csv ou tente novamente.";
+    return null;
+  }
+  var wb=XLSX.read(bytes,{type:"array"});
+  var ws=wb.Sheets[wb.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
+}
+
+function processarLinhas(dados){
+  var info=document.getElementById("info-msg");
+  if(!dados.length){info.className="info-msg err";info.textContent="Arquivo vazio.";return;}
+  var inicio=0;var colN=0,colD=1,colP=2;
+  var prim=dados[0].map(function(c){return String(c||"").toLowerCase().trim()});
+  if(prim.join(" ").search(/produto|nome|descricao|item/)!==-1){
+    inicio=1;
+    prim.forEach(function(c,i){
+      if(/produto|nome|descricao|item/.test(c))colN=i;
+      if(/de|precode|preco.?de/.test(c))colD=i;
+      if(/por|precopor|preco.?por/.test(c))colP=i;
+    });
+  }
+  var novos=[];
+  for(var i=inicio;i<dados.length;i++){
+    var r=dados[i];if(!r||!r[colN])continue;
+    novos.push({nome:String(r[colN]).trim(),de:parseNum(r[colD]),por:parseNum(r[colP])});
+  }
+  if(novos.length===0){info.className="info-msg err";info.textContent="Nenhum item encontrado no arquivo. Verifique as colunas.";return;}
+  itens=novos;
+  info.textContent=novos.length+" itens importados.";
+  renderizar();
+}
+
+document.getElementById("modelo").addEventListener("change",renderizar);
+document.getElementById("btn-print").addEventListener("click",function(){gerarImpressao();window.print()});
+document.getElementById("btn-limpar").addEventListener("click",function(){itens=[];document.getElementById("file-name").textContent="Nenhum arquivo escolhido";document.getElementById("file-input").value="";document.getElementById("info-msg").className="info-msg";document.getElementById("info-msg").textContent="";renderizar()});
+
+// Adicionar item manual (campo rapido)
+document.getElementById("btn-adicionar-manual").addEventListener("click",function(){
+  var nome=prompt("Nome do produto:");
+  if(!nome||nome.trim()==="")return;
+  var de=prompt("Preco De (R$) (opcional):","");
+  var por=prompt("Preco Por (R$):","");
+  itens.push({nome:nome.trim(),de:parseNum(de),por:parseNum(por)});
+  document.getElementById("info-msg").className="info-msg";
+  document.getElementById("info-msg").textContent=itens.length+" itens.";
+  renderizar();
+});
+
+// Carrega o leitor de XLSX via CDN (so se precisar)
+var scriptXLS=document.createElement("script");
+scriptXLS.src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
+document.head.appendChild(scriptXLS);
+
+renderizar();
 </script>
 </body>
 </html>
