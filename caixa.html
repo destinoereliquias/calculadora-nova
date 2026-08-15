@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fechamento de Caixa - Loja da Vivi</title>
+<title>Calculadora de Caixa - Loja da Vivi</title>
 <style>
 :root{--bg:#fdf2f8;--surface:#fff;--text:#4a1d33;--muted:#a06b87;--border:#f8d7e8;--primary:#db2777;--primary-dark:#be185d;--primary-light:#fce7f3;--accent:#f472b6;--ok:#10b981;--danger:#ef4444;--shadow:0 4px 20px rgba(219,39,119,.10)}
 .dark-mode{--bg:#160b12;--surface:#231220;--text:#f3e3ec;--muted:#b489a0;--border:#3a2230;--primary:#f472b6;--primary-dark:#ec4899;--primary-light:#3a2230;--accent:#f9a8d4;--ok:#34d399;--danger:#f87171;--shadow:0 4px 20px rgba(0,0,0,.4)}
@@ -11,7 +11,6 @@
 body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
 .wrap{max-width:1000px;margin:0 auto;padding:24px;padding-bottom:90px}
 .app-header{background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;padding:24px 28px;color:#fff;display:flex;align-items:center;gap:18px;position:relative;overflow:hidden}
-.app-header::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;background:rgba(255,255,255,.12);border-radius:50%}
 .mascot{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #fff;background:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .header-text{flex:1;position:relative;z-index:2}
 .eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:.7rem;opacity:.9;margin:0}
@@ -33,15 +32,15 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
 .field{display:flex;flex-direction:column;gap:6px;font-size:.82rem;font-weight:600}
 .field input,.field select{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:.95rem;font-weight:400;transition:border-color .15s,box-shadow .15s}
 .field input:focus,.field select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
-.money-input-wrap{display:flex;align-items:center;gap:6px}
-.money-input-wrap span{color:var(--muted);font-weight:600}
-.sub-h{font-size:.9rem;margin:18px 0 10px;color:var(--primary-dark)}
-.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:6px}
-.sum-card{background:var(--primary-light);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
-.sum-card .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
-.sum-card .val{font-size:1.35rem;font-weight:800;color:var(--primary-dark);margin-top:4px}
-.sum-card.ok .val{color:var(--ok)}
-.sum-card.erro .val{color:var(--danger)}
+.count-table{width:100%;border-collapse:collapse;margin-top:12px}
+.count-table th,.count-table td{padding:10px 12px;text-align:left;font-size:.9rem;border-bottom:1px solid var(--border)}
+.count-table thead th{background:var(--bg);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.5px}
+.count-table .sec td{background:var(--primary-light);font-weight:700;color:var(--primary-dark);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px}
+.count-table .qtd{width:90px;text-align:center;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:1rem}
+.count-table .qtd:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.count-table .total-row td{background:var(--primary-light);font-weight:800;font-size:1.05rem;color:var(--primary-dark)}
+.count-table .money{text-align:right;font-variant-numeric:tabular-nums}
+.printable{width:100%}
 @media print{
 body *{visibility:hidden}
 .printable,.printable *{visibility:visible}
@@ -60,20 +59,20 @@ body *{visibility:hidden}
     <img src="mascote.jpg" alt="Mascote Loja da Vivi" class="mascot">
     <div class="header-text">
       <p class="eyebrow">✦ Subsistema interno</p>
-      <h1>Fechamento de Caixa</h1>
-      <p class="subtitle">Registre as entradas e saídas e confira o saldo do dia.</p>
-      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando última atualização...</span></span>
+      <h1>Calculadora de Caixa</h1>
+      <p class="subtitle">Conte cedulas e moedas com atualizacao instantanea.</p>
+      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando ultima atualizacao...</span></span>
       <div class="header-actions">
-        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">🌙 Tema escuro</button>
-        <button id="btn-clear" class="btn btn-outline" type="button">↺ Limpar</button>
-        <button id="btn-print" class="btn btn-pink" type="button">🖨️ Imprimir fechamento</button>
+        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">Tema escuro</button>
+        <button id="btn-print" class="btn btn-pink" type="button">Imprimir</button>
       </div>
     </div>
   </header>
 
   <main class="printable">
     <section class="panel">
-      <h2>Dados do caixa</h2>
+      <h2>Operacao</h2>
+      <p class="panel-sub">Preencha as quantidades e acompanhe o total do caixa em tempo real. Atalhos: Ctrl+L limpa, Ctrl+E exemplo.</p>
       <div class="controls-grid">
         <label class="field">Data
           <input id="data" type="date">
@@ -85,60 +84,19 @@ body *{visibility:hidden}
           <div class="money-input-wrap"><span>R$</span><input id="saldoInicial" inputmode="decimal"></div>
         </label>
       </div>
-    </section>
-
-    <section class="panel">
-      <h2>Entradas (recebimentos)</h2>
-      <p class="panel-sub">Valores recebidos hoje por cada forma de pagamento.</p>
-      <div class="controls-grid">
-        <label class="field">Dinheiro
-          <div class="money-input-wrap"><span>R$</span><input id="dinheiro" inputmode="decimal"></div>
-        </label>
-        <label class="field">Cartão débito
-          <div class="money-input-wrap"><span>R$</span><input id="debito" inputmode="decimal"></div>
-        </label>
-        <label class="field">Cartão crédito
-          <div class="money-input-wrap"><span>R$</span><input id="credito" inputmode="decimal"></div>
-        </label>
-        <label class="field">PIX
-          <div class="money-input-wrap"><span>R$</span><input id="pix" inputmode="decimal"></div>
-        </label>
-        <label class="field">Outros
-          <div class="money-input-wrap"><span>R$</span><input id="outros" inputmode="decimal"></div>
-        </label>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="btn-exemplo" class="btn btn-outline" type="button">Preencher exemplo</button>
+        <button id="btn-limpar" class="btn btn-outline" type="button">Limpar tudo</button>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Saídas (retiradas e despesas)</h2>
-      <p class="panel-sub">Valores retirados ou pagos do caixa.</p>
-      <div class="controls-grid">
-        <label class="field">Sangria
-          <div class="money-input-wrap"><span>R$</span><input id="sangria" inputmode="decimal"></div>
-        </label>
-        <label class="field">Pagamentos
-          <div class="money-input-wrap"><span>R$</span><input id="pagamentos" inputmode="decimal"></div>
-        </label>
-        <label class="field">Despesas
-          <div class="money-input-wrap"><span>R$</span><input id="despesas" inputmode="decimal"></div>
-        </label>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>Conferência</h2>
-      <p class="panel-sub">Informe o valor que está fisicamente no caixa para conferir.</p>
-      <div class="controls-grid">
-        <label class="field">Saldo em caixa (conferido)
-          <div class="money-input-wrap"><span>R$</span><input id="saldoConferido" inputmode="decimal"></div>
-        </label>
-      </div>
-      <div class="summary">
-        <div class="sum-card"><div class="lbl">Total de entradas</div><div class="val" id="s-entradas">R$ 0,00</div></div>
-        <div class="sum-card"><div class="lbl">Total de saídas</div><div class="val" id="s-saidas">R$ 0,00</div></div>
-        <div class="sum-card"><div class="lbl">Saldo esperado</div><div class="val" id="s-esperado">R$ 0,00</div></div>
-        <div class="sum-card" id="s-dif-card"><div class="lbl">Diferença</div><div class="val" id="s-dif">R$ 0,00</div></div>
-      </div>
+      <h2>Contagem</h2>
+      <p class="panel-sub">Valor | Quantidade | Total — conferencia rapida de cedulas e moedas.</p>
+      <table class="count-table" id="count-table">
+        <thead><tr><th>Valor</th><th>Quantidade</th><th>Total</th></tr></thead>
+        <tbody id="count-body"></tbody>
+      </table>
     </section>
   </main>
 </div>
@@ -151,32 +109,94 @@ body *{visibility:hidden}
 </nav>
 
 <script>
-(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Última atualização: "+x.toLocaleDateString("pt-BR")+" às "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Última atualização: indisponível"})})();
+(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Ultima atualizacao: "+x.toLocaleDateString("pt-BR")+" as "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Ultima atualizacao: indisponivel"})})();
 var tb=document.getElementById("toggle-dark-mode");
-function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"☀️ Tema claro":"🌙 Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
+function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"Tema claro":"Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
 if(localStorage.getItem("darkMode")==="1")document.documentElement.classList.add("dark-mode");
-tb.textContent=document.documentElement.classList.contains("dark-mode")?"☀️ Tema claro":"🌙 Tema escuro";
+tb.textContent=document.documentElement.classList.contains("dark-mode")?"Tema claro":"Tema escuro";
 tb.addEventListener("click",applyTheme);
-function num(id){var s=String(document.getElementById(id).value||"").trim().replace(/[^\d.,-]/g,"");if(s.includes(".")&&s.includes(","))s=s.replace(/\./g,"").replace(",",".");else if(s.includes(","))s=s.replace(",",".");return parseFloat(s)||0}
+
 function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function calcular(){
-var saldoIni=num("saldoInicial");
-var entradas=num("dinheiro")+num("debito")+num("credito")+num("pix")+num("outros");
-var saidas=num("sangria")+num("pagamentos")+num("despesas");
-var totalEntradas=saldoIni+entradas;
-var esperado=totalEntradas-saidas;
-var conferido=num("saldoConferido");
-var dif=conferido-esperado;
-document.getElementById("s-entradas").textContent=fmt(totalEntradas);
-document.getElementById("s-saidas").textContent=fmt(saidas);
-document.getElementById("s-esperado").textContent=fmt(esperado);
-var dc=document.getElementById("s-dif-card");var dv=document.getElementById("s-dif");
-dv.textContent=fmt(dif);
-dc.className="sum-card"+(dif===0?" ok":(conferido>0?" erro":""));
+
+var CEDULAS=[200,100,50,20,10,5,2];
+var MOEDAS=[1,0.5,0.25,0.1,0.05];
+var VALORES=CEDULAS.concat(MOEDAS);
+var TOTAL_LINHAS=VALORES.length;
+
+// Monta a tabela de contagem
+function montarContagem(){
+  var tbody=document.getElementById("count-body");
+  tbody.innerHTML="";
+  // Linha secao CEDULAS
+  var trs=document.createElement("tr");trs.className="sec";
+  trs.innerHTML='<td colspan="3">Cedulas</td>';tbody.appendChild(trs);
+  CEDULAS.forEach(function(v){tbody.appendChild(linhaValor(v));});
+  // Linha secao MOEDAS
+  var trm=document.createElement("tr");trm.className="sec";
+  trm.innerHTML='<td colspan="3">Moedas</td>';tbody.appendChild(trm);
+  MOEDAS.forEach(function(v){tbody.appendChild(linhaValor(v));});
+  // Linha total
+  var trt=document.createElement("tr");trt.className="total-row";
+  trt.innerHTML='<td colspan="2">Total do caixa</td><td class="money" id="total-caixa">'+fmt(0)+'</td>';
+  tbody.appendChild(trt);
 }
-["data","operador","saldoInicial","dinheiro","debito","credito","pix","outros","sangria","pagamentos","despesas","saldoConferido"].forEach(function(id){document.getElementById(id).addEventListener("input",calcular)});
-document.getElementById("btn-clear").addEventListener("click",function(){["saldoInicial","dinheiro","debito","credito","pix","outros","sangria","pagamentos","despesas","saldoConferido"].forEach(function(id){document.getElementById(id).value=""});document.getElementById("operador").value="";calcular()});
+
+function linhaValor(v){
+  var tr=document.createElement("tr");
+  var celValor=document.createElement("td");celValor.textContent=fmt(v);
+  var celQtd=document.createElement("td");
+  var input=document.createElement("input");
+  input.type="number";input.min="0";input.value="0";
+  input.className="qtd";input.dataset.valor=v;
+  input.addEventListener("input",calcularTotal);
+  celQtd.appendChild(input);
+  var celTotal=document.createElement("td");celTotal.className="money";celTotal.textContent=fmt(0);
+  tr.appendChild(celValor);tr.appendChild(celQtd);tr.appendChild(celTotal);
+  return tr;
+}
+
+function calcularTotal(){
+  var rows=document.querySelectorAll("#count-table tbody tr");
+  var soma=0;
+  rows.forEach(function(tr){
+    var input=tr.querySelector(".qtd");
+    if(input){
+      var q=parseInt(input.value,10)||0;
+      var v=parseFloat(input.dataset.valor)||0;
+      var total=q*v;soma+=total;
+      tr.children[2].textContent=fmt(total);
+    }
+  });
+  var si=parseFloat(String(document.getElementById("saldoInicial").value||"").replace(/\./g,"").replace(",","."))||0;
+  document.getElementById("total-caixa").textContent=fmt(soma+si);
+}
+
+function limparTudo(){
+  document.querySelectorAll(".qtd").forEach(function(i){i.value="0"});
+  ["saldoInicial","operador"].forEach(function(id){document.getElementById(id).value=""});
+  calcularTotal();
+}
+
+function preencherExemplo(){
+  document.getElementById("saldoInicial").value="0";
+  var ex={200:1,100:1,50:2,20:0,10:1,5:0,2:0,1:0,0.5:0,0.25:0,0.1:0,0.05:0};
+  document.querySelectorAll(".qtd").forEach(function(i){
+    var v=parseFloat(i.dataset.valor);
+    i.value=ex[v]!=null?ex[v]:"0";
+  });
+  calcularTotal();
+}
+
+montarContagem();
+calcularTotal();
+document.getElementById("saldoInicial").addEventListener("input",calcularTotal);
+document.getElementById("btn-limpar").addEventListener("click",limparTudo);
+document.getElementById("btn-exemplo").addEventListener("click",preencherExemplo);
 document.getElementById("btn-print").addEventListener("click",function(){window.print()});
+document.addEventListener("keydown",function(e){
+  if(e.ctrlKey&&e.key==="l"){e.preventDefault();limparTudo();}
+  if(e.ctrlKey&&e.key==="e"){e.preventDefault();preencherExemplo();}
+});
 var hoje=new Date();document.getElementById("data").value=hoje.toISOString().split("T")[0];
 </script>
 </body>
