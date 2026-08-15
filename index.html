@@ -11,6 +11,7 @@
 body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
 .wrap{max-width:1150px;margin:0 auto;padding:24px;padding-bottom:90px}
 .app-header{background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;padding:28px 32px;color:#fff;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden}
+.app-header::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(255,255,255,.12);border-radius:50%}
 .mascot{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid #fff;background:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .header-text{flex:1;position:relative;z-index:2}
 .eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:.72rem;opacity:.9;margin:0}
@@ -85,6 +86,15 @@ details ol{margin:8px 0 0;padding-left:20px}
     <section class="panel">
       <h2>Parametros da operacao</h2>
       <p class="panel-sub">Defina os dados do produto para calcular.</p>
+      <details open>
+        <summary>Como usar em 4 passos</summary>
+        <ol>
+          <li>Selecione o CNPJ e o peso.</li>
+          <li>Informe o custo do produto.</li>
+          <li>Preencha apenas um modo de calculo.</li>
+          <li>Confira os resultados por marketplace.</li>
+        </ol>
+      </details>
       <div class="controls-grid">
         <label class="field">CNPJ
           <select id="cnpj">
@@ -178,80 +188,286 @@ details ol{margin:8px 0 0;padding-left:20px}
   <a class="nav-item" href="danfe.html"><span class="nav-icon">📄</span> DANFE</a>
 </nav>
 
-<script src="config.js"></script>
-<script src="calculadora.js"></script>
 <script>
-(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Ultima atualizacao: "+x.toLocaleDateString("pt-BR")+" as "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Ultima atualizacao: indisponivel"})})();
-var tb=document.getElementById("toggle-dark-mode");
-function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"Tema claro":"Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
-if(localStorage.getItem("darkMode")==="1")document.documentElement.classList.add("dark-mode");
-tb.textContent=document.documentElement.classList.contains("dark-mode")?"Tema claro":"Tema escuro";
-tb.addEventListener("click",applyTheme);
+/* ============================================================
+   1) CONFIG - TODAS AS TAXAS, COMISSOES E FRETES
+   Edite SOMENTE esta secao para alterar qualquer valor.
+   ============================================================ */
+var MARGEM_PADRAO = 30;
+var NIVEL_DESCONTO = { 5: 0.85, 4: 0.90, 3: 0.95, 2: 1.00, 1: 1.05 };
+var CNPJ_ALIQUOTAS = {
+  "LOJA DA VIVI LTDA": 12,
+  "FERREIRA PROSPERITA COSMETICOS LTDA": 12,
+  "RAV SHEFA DISTRIBUIDORA DE COSMETICOS LTDA": 10,
+  "VIVIANE CHRISTINA FERREIRA": 12
+};
+var PRESENCIAL = { comissao: 0, taxaFixa: 0, frete: 0 };
+var AMAZON = { comissao: 15, frete: { ate30: 15, ate50: 12, ate79: 8, acima79: 5 } };
+var CASAS_BAHIA = { comissao: 10, taxaFixa: 2, frete: { ate69: 20, acima69: 0 } };
+var MAGALU = { comissao: 12, taxaFixa: { ate10: 3, acima10: 5 }, frete: { ate79: 15, acima79: 8 } };
+var MERCADO_LIVRE = {
+  comissao: { classico: 13, premium: 17.5 },
+  faixasPreco: [
+    { limite: 18.99 }, { limite: 48.99 }, { limite: 78.99 }, { limite: 99.99 },
+    { limite: 119.99 }, { limite: 149.99 }, { limite: 199.99 }, { limite: Infinity }
+  ],
+  faixasPeso: [
+    { pesoMax: 0.3,  custos: [5.65, 6.85, 8.15, 12.95, 14.95, 16.95, 19.05, 21.65] },
+    { pesoMax: 0.5,  custos: [5.95, 6.95, 8.25, 13.85, 16.15, 18.15, 20.45, 23.25] },
+    { pesoMax: 1,    custos: [6.05, 7.15, 8.45, 14.45, 16.85, 19.05, 21.35, 24.45] },
+    { pesoMax: 1.5,  custos: [6.15, 7.35, 8.65, 14.75, 17.15, 19.45, 21.75, 25.45] },
+    { pesoMax: 2,    custos: [6.25, 7.45, 8.75, 15.05, 17.65, 19.85, 22.25, 25.55] },
+    { pesoMax: 3,    custos: [6.35, 8.65, 9.15, 16.45, 19.15, 21.65, 24.35, 27.05] },
+    { pesoMax: 4,    custos: [6.45, 8.75, 9.75, 17.85, 20.75, 23.35, 26.35, 29.25] },
+    { pesoMax: 5,    custos: [6.55, 8.85, 10.25, 19.75, 22.85, 26.05, 29.25, 32.45] },
+    { pesoMax: 6,    custos: [6.65, 8.95, 10.35, 25.95, 29.15, 33.35, 36.45, 40.85] },
+    { pesoMax: 7,    custos: [6.75, 9.05, 10.45, 27.55, 30.75, 35.15, 38.25, 42.85] },
+    { pesoMax: 8,    custos: [6.85, 9.25, 10.65, 29.45, 32.95, 37.45, 40.85, 45.85] },
+    { pesoMax: 9,    custos: [6.95, 9.45, 10.85, 30.25, 33.95, 38.65, 42.25, 47.45] },
+    { pesoMax: 10,   custos: [7.05, 9.65, 11.05, 38.25, 42.65, 48.85, 52.95, 59.45] },
+    { pesoMax: 11,   custos: [7.05, 9.65, 11.05, 41.65, 48.55, 55.45, 62.35, 69.35] },
+    { pesoMax: 13,   custos: [7.15, 10.05, 11.45, 42.55, 49.75, 56.85, 63.85, 70.95] },
+    { pesoMax: 15,   custos: [7.25, 10.25, 11.65, 45.55, 52.95, 60.55, 68.15, 75.65] },
+    { pesoMax: 17,   custos: [7.35, 10.45, 11.85, 48.95, 56.55, 64.05, 71.35, 79.35] },
+    { pesoMax: 20,   custos: [7.45, 10.65, 12.05, 55.15, 64.35, 73.55, 82.75, 91.95] },
+    { pesoMax: 25,   custos: [7.65, 11.05, 12.25, 64.55, 75.75, 85.45, 96.25, 106.85] },
+    { pesoMax: 30,   custos: [7.75, 11.25, 12.45, 66.45, 76.05, 86.25, 97.15, 107.85] },
+    { pesoMax: 40,   custos: [7.85, 11.45, 12.65, 68.35, 79.65, 89.75, 100.05, 107.95] },
+    { pesoMax: 50,   custos: [7.95, 11.65, 12.85, 70.95, 81.85, 92.85, 103.45, 111.65] },
+    { pesoMax: 60,   custos: [8.05, 11.85, 13.05, 75.55, 87.25, 99.05, 110.25, 119.05] },
+    { pesoMax: 70,   custos: [8.15, 12.05, 13.25, 80.95, 93.75, 105.95, 118.05, 127.45] },
+    { pesoMax: 80,   custos: [8.25, 12.25, 13.45, 84.65, 97.95, 110.75, 123.35, 133.15] },
+    { pesoMax: 90,   custos: [8.35, 12.45, 13.65, 94.05, 108.35, 122.95, 136.95, 147.85] },
+    { pesoMax: 100,  custos: [8.45, 12.65, 13.85, 107.45, 124.85, 140.45, 156.45, 168.85] },
+    { pesoMax: 125,  custos: [8.55, 12.85, 14.05, 120.15, 138.95, 156.95, 174.85, 188.85] },
+    { pesoMax: 150,  custos: [8.65, 12.85, 14.25, 127.45, 147.05, 166.55, 185.55, 200.35] },
+    { pesoMax: Infinity, custos: [8.75, 12.85, 14.45, 167.05, 193.35, 218.45, 243.45, 262.85] }
+  ]
+};
+var OLIST = { comissao: 10, taxaFixa: 2, frete: { ate79: 15, acima79: 8 } };
+var RD = { comissao: 8, frete: 10 };
+var SHEIN = { comissao: 12, taxaFixa: 2, frete: { ate49: 12, acima49: 8 } };
+var SHOPEE = { comissao: { ate79: 14, acima79: 16 }, taxaFixa: { ate79: 4, ate99: 5, ate199: 6, acima200: 8 }, frete: 12 };
+var TEMU = { comissao: 0, taxaFixa: 0, frete: 0 };
+var TIKTOK = { comissao: { ate50: 10, acima50: 6 }, taxaFixa: { ate50: 4, acima50: 6 }, frete: 10 };
+var CANAIS = {
+  presencial: PRESENCIAL,
+  amazon: AMAZON,
+  casasBahia: CASAS_BAHIA,
+  magalu: MAGALU,
+  mercadoLivre: MERCADO_LIVRE,
+  olist: OLIST,
+  rd: RD,
+  shein: SHEIN,
+  shopee: SHOPEE,
+  temu: TEMU,
+  tiktok: TIKTOK
+};
 
-var LINHAS=[["presencial","PRESENCIAL","classico"],["amazon","AMAZON","classico"],["casasBahia","CASAS BAHIA","classico"],["magalu","MAGALU","classico"],["mercadoLivre","MERCADO LIVRE CLASSICO","classico"],["mercadoLivre","MERCADO LIVRE PREMIUM","premium"],["olist","OLIST","classico"],["rd","RD","classico"],["shein","SHEIN","classico"],["shopee","SHOPEE","classico"],["temu","TEMU","classico"],["tiktok","TIKTOK","classico"]];
+/* ============================================================
+   2) MOTOR DE CALCULO
+   ============================================================ */
+function parseNumero(texto) {
+  if (typeof texto === "number") return texto;
+  var v = String(texto).trim().replace(/[^\d.,-]/g, "");
+  if (v.indexOf(".") !== -1 && v.indexOf(",") !== -1) v = v.replace(/\./g, "").replace(",", ".");
+  else if (v.indexOf(",") !== -1) v = v.replace(",", ".");
+  return parseFloat(v) || 0;
+}
+function formatarMoeda(valor) {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+function custoEnvioML(pesoKg, precoProduto) {
+  var linha = MERCADO_LIVRE.faixasPeso.filter(function (f) { return pesoKg <= f.pesoMax; })[0];
+  var coluna = -1;
+  for (var i = 0; i < MERCADO_LIVRE.faixasPreco.length; i++) {
+    if (precoProduto <= MERCADO_LIVRE.faixasPreco[i].limite) { coluna = i; break; }
+  }
+  if (coluna === -1) coluna = MERCADO_LIVRE.faixasPreco.length - 1;
+  return linha.custos[coluna];
+}
+function porFaixa(obj, preco) {
+  if (typeof obj === "number") return obj;
+  var chaves = Object.keys(obj).sort(function (a, b) {
+    var na = parseFloat(a.replace("ate", "").replace("acima", "999999"));
+    var nb = parseFloat(b.replace("ate", "").replace("acima", "999999"));
+    return na - nb;
+  });
+  for (var i = 0; i < chaves.length; i++) {
+    var chave = chaves[i];
+    if (chave.indexOf("ate") === 0 && preco <= parseFloat(chave.replace("ate", ""))) return obj[chave];
+  }
+  return obj.acima79 != null ? obj.acima79
+    : obj.acima50 != null ? obj.acima50
+    : obj.acima200 != null ? obj.acima200
+    : obj.acima69 != null ? obj.acima69
+    : obj.acima49 != null ? obj.acima49 : 0;
+}
+function calcularPreco(entradas) {
+  var custo = entradas.custo || 0;
+  var cnpj = entradas.cnpj || "";
+  var nivel = entradas.nivel || 5;
+  var pesoKg = entradas.pesoKg || 0;
+  var plano = entradas.plano || "classico";
+  var valorManual = entradas.valorManual || 0;
+  var valorLiq = entradas.valorLiq || 0;
+  var pctLiq = entradas.pctLiq || 0;
 
-// Monta a tabela sempre visivel (12 linhas) ao carregar
-function montarTabela(){
-  var tbody=document.getElementById("result-body");
-  tbody.innerHTML="";
-  LINHAS.forEach(function(l){
-    var tr=document.createElement("tr");
-    tr.innerHTML='<th class="marketplace-cell">'+l[1]+'</th><td class="result-cell">—</td><td class="result-cell">—</td><td class="result-cell">—</td>';
-    tr.dataset.canal=l[0];tr.dataset.plano=l[2];
+  var aliquota = (CNPJ_ALIQUOTAS[cnpj] != null ? CNPJ_ALIQUOTAS[cnpj] : 12) / 100;
+  var constNivel = NIVEL_DESCONTO[nivel] != null ? NIVEL_DESCONTO[nivel] : 1;
+  var resultados = {};
+
+  Object.keys(CANAIS).forEach(function (canal) {
+    var cfg = CANAIS[canal];
+
+    var comissaoPct;
+    if (typeof cfg.comissao === "number") comissaoPct = cfg.comissao;
+    else if (cfg.comissao[plano] !== undefined) comissaoPct = cfg.comissao[plano];
+    else comissaoPct = porFaixa(cfg.comissao, 0);
+
+    var denominador = 1 - aliquota - comissaoPct / 100;
+
+    function fretePara(preco) {
+      if (canal === "mercadoLivre") return custoEnvioML(pesoKg, preco);
+      if (typeof cfg.frete === "number") return cfg.frete;
+      return porFaixa(cfg.frete, preco) * constNivel;
+    }
+    function taxaPara(preco) {
+      if (cfg.taxaFixa) return porFaixa(cfg.taxaFixa, preco);
+      return 0;
+    }
+
+    var manual = null;
+    if (valorManual > 0) {
+      manual = valorManual * (1 - aliquota - comissaoPct / 100) - custo - fretePara(valorManual) - taxaPara(valorManual);
+    }
+
+    var vliq = null;
+    if (valorLiq > 0) {
+      vliq = (valorLiq + custo + fretePara(valorLiq) + taxaPara(valorLiq)) / denominador;
+    }
+
+    var pct = null;
+    if (pctLiq > 0) {
+      var custoComMargem = custo * (1 + pctLiq / 100);
+      pct = (custoComMargem + fretePara(custoComMargem) + taxaPara(custoComMargem)) / denominador;
+    }
+
+    resultados[canal] = { manual: manual, vliq: vliq, pct: pct };
+  });
+
+  return resultados;
+}
+
+/* ============================================================
+   3) INTERFACE
+   ============================================================ */
+(function () {
+  var textEl = document.getElementById("updated-text");
+  fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var commit = Array.isArray(data) ? data[0] : null;
+      if (!commit || !commit.commit) throw new Error("sem dados");
+      var d = new Date(commit.commit.committer.date);
+      textEl.textContent = "Ultima atualizacao: " + d.toLocaleDateString("pt-BR") + " as " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    })
+    .catch(function () { textEl.textContent = "Ultima atualizacao: indisponivel"; });
+})();
+
+var themeBtn = document.getElementById("toggle-dark-mode");
+function applyTheme() {
+  var dark = document.documentElement.classList.toggle("dark-mode");
+  themeBtn.textContent = dark ? "Tema claro" : "Tema escuro";
+  localStorage.setItem("darkMode", dark ? "1" : "0");
+}
+if (localStorage.getItem("darkMode") === "1") document.documentElement.classList.add("dark-mode");
+themeBtn.textContent = document.documentElement.classList.contains("dark-mode") ? "Tema claro" : "Tema escuro";
+themeBtn.addEventListener("click", applyTheme);
+
+var LINHAS = [
+  ["presencial", "PRESENCIAL", "classico"],
+  ["amazon", "AMAZON", "classico"],
+  ["casasBahia", "CASAS BAHIA", "classico"],
+  ["magalu", "MAGALU", "classico"],
+  ["mercadoLivre", "MERCADO LIVRE CLASSICO", "classico"],
+  ["mercadoLivre", "MERCADO LIVRE PREMIUM", "premium"],
+  ["olist", "OLIST", "classico"],
+  ["rd", "RD", "classico"],
+  ["shein", "SHEIN", "classico"],
+  ["shopee", "SHOPEE", "classico"],
+  ["temu", "TEMU", "classico"],
+  ["tiktok", "TIKTOK", "classico"]
+];
+
+function montarTabela() {
+  var tbody = document.getElementById("result-body");
+  tbody.innerHTML = "";
+  LINHAS.forEach(function (l) {
+    var tr = document.createElement("tr");
+    tr.innerHTML = '<th class="marketplace-cell">' + l[1] + '</th><td class="result-cell">—</td><td class="result-cell">—</td><td class="result-cell">—</td>';
     tbody.appendChild(tr);
   });
 }
 montarTabela();
 
-function parseNum(v){if(typeof v==="number")return v;var s=String(v||"").trim().replace(/[^\d.,-]/g,"");if(s.indexOf(".")!==-1&&s.indexOf(",")!==-1)s=s.replace(/\./g,"").replace(",",".");else if(s.indexOf(",")!==-1)s=s.replace(",",".");return parseFloat(s)||0}
-function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function parseNum(v) {
+  if (typeof v === "number") return v;
+  var s = String(v || "").trim().replace(/[^\d.,-]/g, "");
+  if (s.indexOf(".") !== -1 && s.indexOf(",") !== -1) s = s.replace(/\./g, "").replace(",", ".");
+  else if (s.indexOf(",") !== -1) s = s.replace(",", ".");
+  return parseFloat(s) || 0;
+}
+function fmt(v) { return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
 
-function calcular(){
-  var fb=document.getElementById("calc-feedback");
-  try{
-    var cnpj=document.getElementById("cnpj").value;
-    var pesoKg=parseNum(document.getElementById("peso").value);
-    var custo=parseNum(document.getElementById("custo").value);
-    var nivel=parseInt(document.getElementById("nivel").value,10)||5;
-    var Manual=parseNum(document.getElementById("Manual").value);
-    var ValorLiq=parseNum(document.getElementById("ValorLiq").value);
-    var PctLiq=parseNum(document.getElementById("PctLiq").value);
-    var preencheu=false;
+function calcular() {
+  var fb = document.getElementById("calc-feedback");
+  try {
+    var cnpj = document.getElementById("cnpj").value;
+    var pesoKg = parseNum(document.getElementById("peso").value);
+    var custo = parseNum(document.getElementById("custo").value);
+    var nivel = parseInt(document.getElementById("nivel").value, 10) || 5;
+    var Manual = parseNum(document.getElementById("Manual").value);
+    var ValorLiq = parseNum(document.getElementById("ValorLiq").value);
+    var PctLiq = parseNum(document.getElementById("PctLiq").value);
 
-    if(cnpj!=="Selecione"&&pesoKg>0&&custo>0&&(Manual>0||ValorLiq>0||PctLiq>0)){
-      var linhas=document.getElementById("result-body").children;
-      LINHAS.forEach(function(l,i){
-        var res=calcularPreco({custo:custo,cnpj:cnpj,nivel:nivel,pesoKg:pesoKg,plano:l[2],valorManual:Manual,valorLiq:ValorLiq,pctLiq:PctLiq});
-        var r=res[l[0]];var cel=linhas[i].children;
-        cel[1].textContent=Manual>0?fmt(r.manual):"—";
-        cel[2].textContent=ValorLiq>0?fmt(r.vliq):"—";
-        cel[3].textContent=PctLiq>0?fmt(r.pct):"—";
-      });
-      preencheu=true;
-    }
+    if (cnpj === "Selecione") { fb.dataset.state = "error"; fb.textContent = "Selecione o CNPJ para iniciar."; return; }
+    if (pesoKg <= 0) { fb.dataset.state = "error"; fb.textContent = "Selecione a faixa de peso do produto."; return; }
+    if (!(custo > 0)) { fb.dataset.state = "error"; fb.textContent = "Informe um custo maior que zero."; return; }
+    if (!(Manual > 0 || ValorLiq > 0 || PctLiq > 0)) { fb.dataset.state = "error"; fb.textContent = "Preencha ao menos um modo de calculo."; return; }
 
-    if(cnpj==="Selecione"){fb.dataset.state="error";fb.textContent="Selecione o CNPJ para iniciar.";}
-    else if(pesoKg<=0){fb.dataset.state="error";fb.textContent="Selecione a faixa de peso do produto.";}
-    else if(!(custo>0)){fb.dataset.state="error";fb.textContent="Informe um custo maior que zero.";}
-    else if(!(Manual>0||ValorLiq>0||PctLiq>0)){fb.dataset.state="error";fb.textContent="Preencha ao menos um modo de calculo.";}
-    else{fb.dataset.state="success";fb.textContent="Calculo pronto. Resultados atualizados automaticamente.";}
-  }catch(e){fb.dataset.state="error";fb.textContent="Erro no calculo: "+e.message;}
+    var linhas = document.getElementById("result-body").children;
+    LINHAS.forEach(function (l, i) {
+      var res = calcularPreco({ custo: custo, cnpj: cnpj, nivel: nivel, pesoKg: pesoKg, plano: l[2], valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq });
+      var r = res[l[0]];
+      var cel = linhas[i].children;
+      cel[1].textContent = Manual > 0 ? fmt(r.manual) : "—";
+      cel[2].textContent = ValorLiq > 0 ? fmt(r.vliq) : "—";
+      cel[3].textContent = PctLiq > 0 ? fmt(r.pct) : "—";
+    });
+
+    fb.dataset.state = "success";
+    fb.textContent = "Calculo pronto. Resultados atualizados automaticamente.";
+  } catch (e) {
+    fb.dataset.state = "error";
+    fb.textContent = "Erro no calculo: " + e.message;
+  }
 }
 
-["cnpj","peso","custo","nivel","Manual","ValorLiq","PctLiq"].forEach(function(id){
-  var el=document.getElementById(id);
-  if(el)el.addEventListener(id==="nivel"||id==="cnpj"||id==="peso"?"change":"input",calcular);
+["cnpj", "peso", "custo", "nivel", "Manual", "ValorLiq", "PctLiq"].forEach(function (id) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener(id === "nivel" || id === "cnpj" || id === "peso" ? "change" : "input", calcular);
 });
 
-document.getElementById("clear-calculation").addEventListener("click",function(){
-  ["custo","Manual","ValorLiq","PctLiq"].forEach(function(id){document.getElementById(id).value=""});
-  document.getElementById("cnpj").value="Selecione";
-  document.getElementById("peso").value="Selecione";
-  document.getElementById("nivel").value="5";
+document.getElementById("clear-calculation").addEventListener("click", function () {
+  ["custo", "Manual", "ValorLiq", "PctLiq"].forEach(function (id) { document.getElementById(id).value = ""; });
+  document.getElementById("cnpj").value = "Selecione";
+  document.getElementById("peso").value = "Selecione";
+  document.getElementById("nivel").value = "5";
   montarTabela();
-  var fb=document.getElementById("calc-feedback");
-  fb.dataset.state="";
-  fb.textContent="Campos limpos. Preencha novamente para calcular.";
+  var fb = document.getElementById("calc-feedback");
+  fb.dataset.state = "";
+  fb.textContent = "Campos limpos. Preencha novamente para calcular.";
 });
 </script>
 </body>
