@@ -6,111 +6,96 @@
   <title>Calculadora de Marketplaces - Loja da Vivi</title>
   <style>
     :root {
-      --bg: #f3f3f3; --surface: #ffffff; --text: #1a1a1a; --muted: #6b6b6b;
-      --border: #e0e0e0; --accent: #0f6cbd; --accent-hover: #0a5a9e;
-      --danger: #c42b1c; --ok: #107c10;
+      --bg: #f4f5fb; --surface: #ffffff; --text: #1f2430; --muted: #6b7280;
+      --border: #e5e7eb; --primary: #7c3aed; --primary-dark: #6d28d9;
+      --primary-light: #ede9fe; --accent: #ec4899; --ok: #10b981; --danger: #ef4444;
+      --shadow: 0 4px 20px rgba(124, 58, 237, .08);
     }
     .dark-mode {
-      --bg: #1b1b1b; --surface: #2b2b2b; --text: #f3f3f3; --muted: #a0a0a0;
-      --border: #3d3d3d; --accent: #4cc2ff; --accent-hover: #7ad0ff;
-      --danger: #ff6b5e; --ok: #6ccb5f;
+      --bg: #0f1117; --surface: #1a1d27; --text: #e5e7eb; --muted: #9ca3af;
+      --border: #2a2e3a; --primary: #a78bfa; --primary-dark: #8b5cf6;
+      --primary-light: #2a2440; --accent: #f472b6; --ok: #34d399; --danger: #f87171;
+      --shadow: 0 4px 20px rgba(0,0,0,.4);
     }
     * { box-sizing: border-box; }
-    body { font-family: "Segoe UI", system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
-
-    /* Login */
-    .login-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 50; }
-    .login-overlay[hidden] { display: none; }
-    .login-card { background: var(--surface); padding: 28px; border-radius: 8px; width: 320px; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
-    .login-card h2 { margin: 0 0 4px; font-size: 1.3rem; }
-    .login-kicker { color: var(--accent); font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; margin: 0 0 8px; }
-    .login-description { color: var(--muted); font-size: .85rem; margin: 0 0 16px; }
-    .field { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; margin-bottom: 12px; }
-    .field input, .field select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-size: .95rem; }
-    .login-remember { display: flex; align-items: center; gap: 6px; font-size: .82rem; margin-bottom: 14px; }
-    .login-error { color: var(--danger); font-size: .82rem; min-height: 18px; margin: 0 0 10px; }
-    .btn { padding: 8px 16px; border: none; border-radius: 4px; font-size: .9rem; cursor: pointer; }
-    .btn-primary { background: var(--accent); color: #fff; width: 100%; }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
+    .wrap { max-width: 1150px; margin: 0 auto; padding: 24px; }
 
     /* Header */
-    .app-header { border-bottom: 1px solid var(--border); padding: 20px 0 16px; }
-    .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-size: .72rem; margin: 0; }
-    .app-header h1 { margin: 4px 0 2px; font-size: 1.6rem; }
-    .subtitle { color: var(--muted); margin: 0; font-size: .9rem; }
-    .header-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .app-header { background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 16px; padding: 32px; color: #fff; position: relative; overflow: hidden; }
+    .app-header::after { content: ""; position: absolute; right: -40px; top: -40px; width: 200px; height: 200px; background: rgba(255,255,255,.1); border-radius: 50%; }
+    .eyebrow { text-transform: uppercase; letter-spacing: 2px; font-size: .72rem; opacity: .85; margin: 0; }
+    .app-header h1 { margin: 6px 0 4px; font-size: 1.8rem; font-weight: 700; }
+    .subtitle { margin: 0; opacity: .9; font-size: .95rem; }
+    .header-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; position: relative; z-index: 2; }
+    .btn { padding: 9px 16px; border: none; border-radius: 10px; font-size: .88rem; cursor: pointer; font-weight: 600; transition: transform .15s, box-shadow .15s; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-ghost { background: rgba(255,255,255,.2); color: #fff; backdrop-filter: blur(4px); }
+    .btn-ghost:hover { background: rgba(255,255,255,.3); }
 
     /* Panels */
-    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-top: 20px; }
-    .panel h2 { margin: 0 0 12px; font-size: 1.1rem; }
-    details { color: var(--muted); font-size: .85rem; margin-bottom: 16px; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-top: 20px; box-shadow: var(--shadow); }
+    .panel h2 { margin: 0 0 4px; font-size: 1.15rem; }
+    .panel-sub { color: var(--muted); font-size: .85rem; margin: 0 0 16px; }
+    details { color: var(--muted); font-size: .85rem; margin-bottom: 16px; background: var(--bg); border-radius: 8px; padding: 10px 14px; }
+    details[open] { padding-bottom: 14px; }
     details ol { margin: 8px 0 0; padding-left: 20px; }
-    .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
-    .money-input-wrap { display: flex; align-items: center; gap: 4px; }
-    .money-input-wrap span { color: var(--muted); }
-    .calc-feedback { font-size: .85rem; color: var(--muted); margin: 14px 0 0; min-height: 18px; }
-    .calc-feedback[data-state="success"] { color: var(--ok); }
-    .calc-feedback[data-state="error"] { color: var(--danger); }
+    details li { margin: 2px 0; }
+    .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; font-size: .82rem; font-weight: 600; }
+    .field input, .field select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font-size: .95rem; font-weight: 400; transition: border-color .15s, box-shadow .15s; }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .money-input-wrap { display: flex; align-items: center; gap: 6px; }
+    .money-input-wrap span { color: var(--muted); font-weight: 600; }
+    .calc-feedback { font-size: .85rem; color: var(--muted); margin: 16px 0 0; padding: 10px 14px; border-radius: 8px; background: var(--bg); min-height: 20px; }
+    .calc-feedback[data-state="success"] { color: var(--ok); background: rgba(16,185,129,.1); }
+    .calc-feedback[data-state="error"] { color: var(--danger); background: rgba(239,68,68,.1); }
 
     /* Mode cards */
-    .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-    .mode-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--surface); }
-    .mode-card.is-active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-    .mode-card h3 { margin: 0 0 6px; font-size: 1rem; }
-    .mode-card p { color: var(--muted); font-size: .82rem; margin: 0 0 12px; }
-    .inline-field .field { flex-direction: row; align-items: center; }
+    .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .mode-card { border: 1px solid var(--border); border-radius: 14px; padding: 18px; background: var(--surface); transition: box-shadow .2s, transform .2s; }
+    .mode-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .mode-card h3 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .mode-card p { color: var(--muted); font-size: .82rem; margin: 0 0 14px; }
+    .mode-badge { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .mode-badge.manual { background: var(--primary); }
+    .mode-badge.vl { background: var(--accent); }
+    .mode-badge.pct { background: var(--ok); }
 
     /* Table */
-    .results-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    .results-table th, .results-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; font-size: .88rem; }
-    .results-table thead th { background: var(--surface); color: var(--text); font-weight: 600; }
+    .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+    .results-table { width: 100%; border-collapse: collapse; }
+    .results-table th, .results-table td { padding: 12px 14px; text-align: left; font-size: .88rem; }
+    .results-table thead th { background: var(--bg); color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: .72rem; letter-spacing: .5px; border-bottom: 1px solid var(--border); }
+    .results-table tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    .results-table tbody tr:last-child { border-bottom: none; }
+    .results-table tbody tr:hover { background: var(--primary-light); }
     .results-table .marketplace-cell { font-weight: 600; }
-    .results-table .result-cell { text-align: right; font-variant-numeric: tabular-nums; }
-    .table-wrap { overflow-x: auto; }
+    .results-table .result-cell { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
 
     /* Footer */
-    .app-footer { border-top: 1px solid var(--border); margin-top: 24px; padding: 16px 0; color: var(--muted); font-size: .82rem; }
-    .footer-kicker { text-transform: uppercase; letter-spacing: 1px; font-size: .7rem; margin: 0; color: var(--accent); }
-    .footer-title { margin: 2px 0; font-weight: 600; }
+    .app-footer { margin-top: 28px; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; color: var(--muted); font-size: .82rem; text-align: center; }
+    .footer-kicker { text-transform: uppercase; letter-spacing: 2px; font-size: .68rem; margin: 0; color: var(--primary); font-weight: 600; }
+    .footer-title { margin: 4px 0; font-weight: 700; color: var(--text); }
     .footer-text { margin: 0; }
   </style>
 </head>
 <body>
-  <!-- Login -->
-  <div id="login-overlay" class="login-overlay" hidden>
-    <form id="login-form" class="login-card">
-      <p class="login-kicker">Acesso restrito</p>
-      <h2>Entrar na calculadora</h2>
-      <p class="login-description">Informe seu login e senha.</p>
-      <label class="field">Login
-        <input id="login-user" type="text" autocomplete="username" required>
-      </label>
-      <label class="field">Senha
-        <input id="login-password" type="password" autocomplete="current-password" required>
-      </label>
-      <label class="login-remember"><input id="login-remember" type="checkbox"> Não pedir mais neste navegador</label>
-      <p id="login-error" class="login-error"></p>
-      <button type="submit" class="btn btn-primary">Entrar</button>
-    </form>
-  </div>
-
   <div class="wrap">
     <header class="app-header">
-      <p class="eyebrow">Subsistema interno</p>
+      <p class="eyebrow">✦ Subsistema interno</p>
       <h1>Calculadora da Loja da Vivi</h1>
       <p class="subtitle">Preços consistentes para todos os marketplaces.</p>
       <div class="header-actions">
-        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">Tema escuro</button>
-        <button id="clear-calculation" class="btn btn-ghost" type="button">Limpar cálculo</button>
-        <button id="logout-button" class="btn btn-ghost" type="button" hidden>Sair</button>
+        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">🌙 Tema escuro</button>
+        <button id="clear-calculation" class="btn btn-ghost" type="button">↺ Limpar cálculo</button>
       </div>
     </header>
 
     <main>
       <section class="panel">
         <h2>Parâmetros da operação</h2>
+        <p class="panel-sub">Defina os dados do produto para calcular.</p>
         <details open>
           <summary>Como usar em 4 passos</summary>
           <ol>
@@ -162,25 +147,26 @@
 
       <section class="panel">
         <h2>Modos de cálculo</h2>
+        <p class="panel-sub">Escolha o modo e informe o valor.</p>
         <div class="mode-grid">
-          <article class="mode-card" data-mode="manual">
-            <h3>Manual</h3>
+          <article class="mode-card">
+            <h3><span class="mode-badge manual"></span> Manual</h3>
             <p>Informe o preço de venda para ver o líquido aproximado.</p>
-            <label class="field inline-field"><div class="money-input-wrap"><span>R$</span>
+            <label class="field"><div class="money-input-wrap"><span>R$</span>
               <input id="Manual" type="number" inputmode="decimal" placeholder="0,00"></div>
             </label>
           </article>
-          <article class="mode-card" data-mode="valorliquido">
-            <h3>Valor líquido</h3>
+          <article class="mode-card">
+            <h3><span class="mode-badge vl"></span> Valor líquido</h3>
             <p>Informe quanto quer receber para obter o preço de venda.</p>
-            <label class="field inline-field"><div class="money-input-wrap"><span>R$</span>
+            <label class="field"><div class="money-input-wrap"><span>R$</span>
               <input id="ValorLiq" type="number" inputmode="decimal" placeholder="0,00"></div>
             </label>
           </article>
-          <article class="mode-card" data-mode="percentual">
-            <h3>Percentual líquido</h3>
+          <article class="mode-card">
+            <h3><span class="mode-badge pct"></span> Percentual líquido</h3>
             <p>Informe a margem em percentual para receber o preço sugerido.</p>
-            <label class="field inline-field"><div class="money-input-wrap">
+            <label class="field"><div class="money-input-wrap">
               <input id="PctLiq" type="number" inputmode="decimal" placeholder="0"><span>%</span></div>
             </label>
           </article>
@@ -189,7 +175,7 @@
 
       <section class="panel">
         <h2>Resultados por marketplace</h2>
-        <p style="color:var(--muted);font-size:.85rem;margin:0 0 4px;">Comparativo completo por canal com os 3 modos de cálculo ativos.</p>
+        <p class="panel-sub">Comparativo completo por canal com os 3 modos de cálculo ativos.</p>
         <div class="table-wrap">
           <table class="results-table">
             <thead>
@@ -216,59 +202,18 @@
   <script src="config.js"></script>
   <script src="calculadora.js"></script>
   <script>
-    // ============================================================
-    // 🔑 SENHAS DE ACESSO — EDITE AQUI
-    // Cada linha abaixo é um usuário. Para adicionar um novo,
-    // copie uma linha e troque o user e o pass.
-    // Exemplo: { user: "maria", pass: "1234" },
-    // ============================================================
-    const AUTH = [
-      { user: "renato", pass: "otaner" },
-      { user: "viviane", pass: "0212" },
-    ];
-
-    // ---------- Login ----------
-    const loginForm = document.getElementById("login-form");
-    const loginError = document.getElementById("login-error");
-    const overlay = document.getElementById("login-overlay");
-    const logoutBtn = document.getElementById("logout-button");
-    const rememberKey = "calcRemembered";
-
-    function unlock(remember) {
-      overlay.hidden = true;
-      logoutBtn.hidden = false;
-      if (remember) localStorage.setItem(rememberKey, "1");
-    }
-    function lock() {
-      overlay.hidden = false;
-      logoutBtn.hidden = true;
-      localStorage.removeItem(rememberKey);
-    }
-    if (localStorage.getItem(rememberKey) === "1") { overlay.hidden = true; logoutBtn.hidden = false; }
-    loginForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const u = document.getElementById("login-user").value.trim();
-      const p = document.getElementById("login-password").value;
-      const ok = AUTH.some((a) => a.user === u && a.pass === p);
-      if (!ok) { loginError.textContent = "Login ou senha inválidos."; return; }
-      loginError.textContent = "";
-      unlock(document.getElementById("login-remember").checked);
-    });
-    logoutBtn.addEventListener("click", lock);
-
     // ---------- Tema ----------
     const themeBtn = document.getElementById("toggle-dark-mode");
     function applyTheme() {
       const dark = document.documentElement.classList.toggle("dark-mode");
-      themeBtn.textContent = dark ? "Tema claro" : "Tema escuro";
+      themeBtn.textContent = dark ? "☀️ Tema claro" : "🌙 Tema escuro";
       localStorage.setItem("darkMode", dark ? "1" : "0");
     }
     if (localStorage.getItem("darkMode") === "1") document.documentElement.classList.add("dark-mode");
-    themeBtn.textContent = document.documentElement.classList.contains("dark-mode") ? "Tema claro" : "Tema escuro";
+    themeBtn.textContent = document.documentElement.classList.contains("dark-mode") ? "☀️ Tema claro" : "🌙 Tema escuro";
     themeBtn.addEventListener("click", applyTheme);
 
     // ---------- Linhas da tabela (ML separado em 2) ----------
-    // Formato: [canal, rótulo, plano do Mercado Livre]
     const LINHAS = [
       ["presencial", "PRESENCIAL", "classico"],
       ["amazon", "AMAZON", "classico"],
@@ -322,7 +267,7 @@
         tbody.appendChild(tr);
       });
       feedback.dataset.state = "success";
-      feedback.textContent = "Cálculo pronto. Resultados atualizados automaticamente.";
+      feedback.textContent = "✅ Cálculo pronto. Resultados atualizados automaticamente.";
     }
 
     // ---------- Eventos ----------
