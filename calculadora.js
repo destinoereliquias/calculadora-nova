@@ -2,7 +2,7 @@
  * CALCULADORA — MOTOR DE CÁLCULO
  *
  * Lê os valores de config.js e calcula os preços dos canais
- * nos 3 modos (Manual, Valor Líquido, Percentual).
+ * nos 3 modos (Manual, Valor Líquido, Percentual) de uma vez.
  * Edite apenas o config.js para mudar taxas.
  */
 
@@ -41,12 +41,11 @@ function porFaixa(obj, preco) {
   return obj.acima79 ?? obj.acima50 ?? obj.acima200 ?? obj.acima69 ?? obj.acima49 ?? 0;
 }
 
-// Cálculo principal
+// Cálculo principal — retorna os 3 modos juntos por canal
 function calcularPreco(entradas) {
   const {
     custo, cnpj, nivel = 5, pesoKg = 0, plano = "classico",
-    modo = "manual", valorManual = 0, valorLiq = 0, pctLiq = 0,
-    margem = MARGEM_PADRAO,
+    valorManual = 0, valorLiq = 0, pctLiq = 0,
   } = entradas;
 
   const aliquota = (CNPJ_ALIQUOTAS[cnpj] ?? 12) / 100;
@@ -73,29 +72,31 @@ function calcularPreco(entradas) {
     const taxaPara = (preco) => (cfg.taxaFixa ? porFaixa(cfg.taxaFixa, preco) : 0);
 
     // Modo MANUAL: quanto sobra
-    if (modo === "manual") {
+    let manual = null;
+    if (valorManual > 0) {
       const frete = fretePara(valorManual);
       const taxa = taxaPara(valorManual);
-      const liquido = valorManual * (1 - aliquota - comissaoPct / 100) - custo - frete - taxa;
-      resultados[canal] = { valor: liquido, frete, taxa };
+      manual = valorManual * (1 - aliquota - comissaoPct / 100) - custo - frete - taxa;
     }
 
     // Modo VALOR LÍQUIDO: preço para receber X
-    if (modo === "valorLiq") {
+    let vliq = null;
+    if (valorLiq > 0) {
       const frete = fretePara(valorLiq);
       const taxa = taxaPara(valorLiq);
-      const preco = (valorLiq + custo + frete + taxa) / denominador;
-      resultados[canal] = { valor: preco, frete, taxa };
+      vliq = (valorLiq + custo + frete + taxa) / denominador;
     }
 
     // Modo PERCENTUAL: preço para margem X%
-    if (modo === "pctLiq") {
+    let pct = null;
+    if (pctLiq > 0) {
       const custoComMargem = custo * (1 + pctLiq / 100);
       const frete = fretePara(custoComMargem);
       const taxa = taxaPara(custoComMargem);
-      const preco = (custoComMargem + frete + taxa) / denominador;
-      resultados[canal] = { valor: preco, frete, taxa };
+      pct = (custoComMargem + frete + taxa) / denominador;
     }
+
+    resultados[canal] = { manual, vliq, pct };
   }
 
   return resultados;
