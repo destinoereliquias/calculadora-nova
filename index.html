@@ -49,7 +49,9 @@ details ol{margin:8px 0 0;padding-left:20px}
 .results-table{width:100%;border-collapse:collapse}
 .results-table th,.results-table td{padding:12px 14px;text-align:left;font-size:.88rem}
 .results-table thead th{background:var(--bg);color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.5px;border-bottom:1px solid var(--border)}
-.results-table tbody tr{border-bottom:1px solid var(--border)}
+.results-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+.results-table tbody tr:last-child{border-bottom:none}
+.results-table tbody tr:hover{background:var(--primary-light)}
 .results-table .marketplace-cell{font-weight:600}
 .results-table .result-cell{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
 .app-footer{margin-top:28px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:.82rem;text-align:center;margin-bottom:70px}
@@ -145,7 +147,7 @@ details ol{margin:8px 0 0;padding-left:20px}
 
     <section class="panel">
       <h2>Resultados por marketplace</h2>
-      <p class="panel-sub">Comparativo completo por canal com os 3 modos de calculo ativos.</p>
+      <p class="panel-sub">Comparativo completo por canal com os 3 modos de calculo ativos. A tabela fica sempre visivel.</p>
       <div class="table-wrap">
         <table class="results-table">
           <thead>
@@ -179,108 +181,77 @@ details ol{margin:8px 0 0;padding-left:20px}
 <script src="config.js"></script>
 <script src="calculadora.js"></script>
 <script>
-// Ultima atualizacao (data/hora do ultimo commit)
-(function () {
-  var textEl = document.getElementById("updated-text");
-  fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1")
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      var commit = Array.isArray(data) ? data[0] : null;
-      if (!commit || !commit.commit) throw new Error("sem dados");
-      var d = new Date(commit.commit.committer.date);
-      textEl.textContent = "Ultima atualizacao: " + d.toLocaleDateString("pt-BR") + " as " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    })
-    .catch(function () { textEl.textContent = "Ultima atualizacao: indisponivel"; });
-})();
+(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Ultima atualizacao: "+x.toLocaleDateString("pt-BR")+" as "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Ultima atualizacao: indisponivel"})})();
+var tb=document.getElementById("toggle-dark-mode");
+function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"Tema claro":"Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
+if(localStorage.getItem("darkMode")==="1")document.documentElement.classList.add("dark-mode");
+tb.textContent=document.documentElement.classList.contains("dark-mode")?"Tema claro":"Tema escuro";
+tb.addEventListener("click",applyTheme);
 
-// Tema
-var themeBtn = document.getElementById("toggle-dark-mode");
-function applyTheme() {
-  var dark = document.documentElement.classList.toggle("dark-mode");
-  themeBtn.textContent = dark ? "Tema claro" : "Tema escuro";
-  localStorage.setItem("darkMode", dark ? "1" : "0");
+var LINHAS=[["presencial","PRESENCIAL","classico"],["amazon","AMAZON","classico"],["casasBahia","CASAS BAHIA","classico"],["magalu","MAGALU","classico"],["mercadoLivre","MERCADO LIVRE CLASSICO","classico"],["mercadoLivre","MERCADO LIVRE PREMIUM","premium"],["olist","OLIST","classico"],["rd","RD","classico"],["shein","SHEIN","classico"],["shopee","SHOPEE","classico"],["temu","TEMU","classico"],["tiktok","TIKTOK","classico"]];
+
+// Monta a tabela sempre visivel (12 linhas) ao carregar
+function montarTabela(){
+  var tbody=document.getElementById("result-body");
+  tbody.innerHTML="";
+  LINHAS.forEach(function(l){
+    var tr=document.createElement("tr");
+    tr.innerHTML='<th class="marketplace-cell">'+l[1]+'</th><td class="result-cell">—</td><td class="result-cell">—</td><td class="result-cell">—</td>';
+    tr.dataset.canal=l[0];tr.dataset.plano=l[2];
+    tbody.appendChild(tr);
+  });
 }
-if (localStorage.getItem("darkMode") === "1") document.documentElement.classList.add("dark-mode");
-themeBtn.textContent = document.documentElement.classList.contains("dark-mode") ? "Tema claro" : "Tema escuro";
-themeBtn.addEventListener("click", applyTheme);
+montarTabela();
 
-// Linhas da tabela (ML separado em 2)
-var LINHAS = [
-  ["presencial", "PRESENCIAL", "classico"],
-  ["amazon", "AMAZON", "classico"],
-  ["casasBahia", "CASAS BAHIA", "classico"],
-  ["magalu", "MAGALU", "classico"],
-  ["mercadoLivre", "MERCADO LIVRE CLASSICO", "classico"],
-  ["mercadoLivre", "MERCADO LIVRE PREMIUM", "premium"],
-  ["olist", "OLIST", "classico"],
-  ["rd", "RD", "classico"],
-  ["shein", "SHEIN", "classico"],
-  ["shopee", "SHOPEE", "classico"],
-  ["temu", "TEMU", "classico"],
-  ["tiktok", "TIKTOK", "classico"]
-];
+function parseNum(v){if(typeof v==="number")return v;var s=String(v||"").trim().replace(/[^\d.,-]/g,"");if(s.indexOf(".")!==-1&&s.indexOf(",")!==-1)s=s.replace(/\./g,"").replace(",",".");else if(s.indexOf(",")!==-1)s=s.replace(",",".");return parseFloat(s)||0}
+function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
 
-function parseNum(v) {
-  if (typeof v === "number") return v;
-  var s = String(v || "").trim().replace(/[^\d.,-]/g, "");
-  if (s.indexOf(".") !== -1 && s.indexOf(",") !== -1) s = s.replace(/\./g, "").replace(",", ".");
-  else if (s.indexOf(",") !== -1) s = s.replace(",", ".");
-  return parseFloat(s) || 0;
-}
-function fmt(v) { return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
+function calcular(){
+  var fb=document.getElementById("calc-feedback");
+  try{
+    var cnpj=document.getElementById("cnpj").value;
+    var pesoKg=parseNum(document.getElementById("peso").value);
+    var custo=parseNum(document.getElementById("custo").value);
+    var nivel=parseInt(document.getElementById("nivel").value,10)||5;
+    var Manual=parseNum(document.getElementById("Manual").value);
+    var ValorLiq=parseNum(document.getElementById("ValorLiq").value);
+    var PctLiq=parseNum(document.getElementById("PctLiq").value);
+    var preencheu=false;
 
-// Calculo
-function calcular() {
-  var fb = document.getElementById("calc-feedback");
-  try {
-    var cnpj = document.getElementById("cnpj").value;
-    var pesoKg = parseNum(document.getElementById("peso").value);
-    var custo = parseNum(document.getElementById("custo").value);
-    var nivel = parseInt(document.getElementById("nivel").value, 10) || 5;
-    var Manual = parseNum(document.getElementById("Manual").value);
-    var ValorLiq = parseNum(document.getElementById("ValorLiq").value);
-    var PctLiq = parseNum(document.getElementById("PctLiq").value);
+    if(cnpj!=="Selecione"&&pesoKg>0&&custo>0&&(Manual>0||ValorLiq>0||PctLiq>0)){
+      var linhas=document.getElementById("result-body").children;
+      LINHAS.forEach(function(l,i){
+        var res=calcularPreco({custo:custo,cnpj:cnpj,nivel:nivel,pesoKg:pesoKg,plano:l[2],valorManual:Manual,valorLiq:ValorLiq,pctLiq:PctLiq});
+        var r=res[l[0]];var cel=linhas[i].children;
+        cel[1].textContent=Manual>0?fmt(r.manual):"—";
+        cel[2].textContent=ValorLiq>0?fmt(r.vliq):"—";
+        cel[3].textContent=PctLiq>0?fmt(r.pct):"—";
+      });
+      preencheu=true;
+    }
 
-    if (cnpj === "Selecione") { fb.dataset.state = "error"; fb.textContent = "Selecione o CNPJ para iniciar."; return; }
-    if (pesoKg <= 0) { fb.dataset.state = "error"; fb.textContent = "Selecione a faixa de peso do produto."; return; }
-    if (!(custo > 0)) { fb.dataset.state = "error"; fb.textContent = "Informe um custo maior que zero."; return; }
-    if (!(Manual > 0 || ValorLiq > 0 || PctLiq > 0)) { fb.dataset.state = "error"; fb.textContent = "Preencha ao menos um modo de calculo."; return; }
-
-    var tbody = document.getElementById("result-body");
-    tbody.innerHTML = "";
-    LINHAS.forEach(function (l) {
-      var res = calcularPreco({ custo: custo, cnpj: cnpj, nivel: nivel, pesoKg: pesoKg, plano: l[2], valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq });
-      var r = res[l[0]];
-      var tr = document.createElement("tr");
-      tr.innerHTML = '<th class="marketplace-cell">' + l[1] + '</th>' +
-        '<td class="result-cell">' + (Manual > 0 ? fmt(r.manual) : "—") + '</td>' +
-        '<td class="result-cell">' + (ValorLiq > 0 ? fmt(r.vliq) : "—") + '</td>' +
-        '<td class="result-cell">' + (PctLiq > 0 ? fmt(r.pct) : "—") + '</td>';
-      tbody.appendChild(tr);
-    });
-    fb.dataset.state = "success";
-    fb.textContent = "Calculo pronto. Resultados atualizados automaticamente.";
-  } catch (e) {
-    fb.dataset.state = "error";
-    fb.textContent = "Erro no calculo: " + e.message + ". Verifique se config.js e calculadora.js foram copiados corretamente.";
-  }
+    if(cnpj==="Selecione"){fb.dataset.state="error";fb.textContent="Selecione o CNPJ para iniciar.";}
+    else if(pesoKg<=0){fb.dataset.state="error";fb.textContent="Selecione a faixa de peso do produto.";}
+    else if(!(custo>0)){fb.dataset.state="error";fb.textContent="Informe um custo maior que zero.";}
+    else if(!(Manual>0||ValorLiq>0||PctLiq>0)){fb.dataset.state="error";fb.textContent="Preencha ao menos um modo de calculo.";}
+    else{fb.dataset.state="success";fb.textContent="Calculo pronto. Resultados atualizados automaticamente.";}
+  }catch(e){fb.dataset.state="error";fb.textContent="Erro no calculo: "+e.message;}
 }
 
-// Eventos
-["cnpj", "peso", "custo", "nivel", "Manual", "ValorLiq", "PctLiq"].forEach(function (id) {
-  var el = document.getElementById(id);
-  if (el) el.addEventListener(id === "nivel" || id === "cnpj" || id === "peso" ? "change" : "input", calcular);
+["cnpj","peso","custo","nivel","Manual","ValorLiq","PctLiq"].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el)el.addEventListener(id==="nivel"||id==="cnpj"||id==="peso"?"change":"input",calcular);
 });
 
-document.getElementById("clear-calculation").addEventListener("click", function () {
-  ["custo", "Manual", "ValorLiq", "PctLiq"].forEach(function (id) { document.getElementById(id).value = ""; });
-  document.getElementById("cnpj").value = "Selecione";
-  document.getElementById("peso").value = "Selecione";
-  document.getElementById("nivel").value = "5";
-  document.getElementById("result-body").innerHTML = "";
-  var fb = document.getElementById("calc-feedback");
-  fb.dataset.state = "";
-  fb.textContent = "Campos limpos. Preencha novamente para calcular.";
+document.getElementById("clear-calculation").addEventListener("click",function(){
+  ["custo","Manual","ValorLiq","PctLiq"].forEach(function(id){document.getElementById(id).value=""});
+  document.getElementById("cnpj").value="Selecione";
+  document.getElementById("peso").value="Selecione";
+  document.getElementById("nivel").value="5";
+  montarTabela();
+  var fb=document.getElementById("calc-feedback");
+  fb.dataset.state="";
+  fb.textContent="Campos limpos. Preencha novamente para calcular.";
 });
 </script>
 </body>
