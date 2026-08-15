@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Etiquetas Promocionais - Loja da Vivi</title>
+<style>
+:root{--bg:#fdf2f8;--surface:#fff;--text:#4a1d33;--muted:#a06b87;--border:#f8d7e8;--primary:#db2777;--primary-dark:#be185d;--primary-light:#fce7f3;--accent:#f472b6;--ok:#10b981;--danger:#ef4444;--shadow:0 4px 20px rgba(219,39,119,.10)}
+.dark-mode{--bg:#160b12;--surface:#231220;--text:#f3e3ec;--muted:#b489a0;--border:#3a2230;--primary:#f472b6;--primary-dark:#ec4899;--primary-light:#3a2230;--accent:#f9a8d4;--ok:#34d399;--danger:#f87171;--shadow:0 4px 20px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding:24px;padding-bottom:90px}
+.app-header{background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;padding:24px 28px;color:#fff;display:flex;align-items:center;gap:18px;position:relative;overflow:hidden}
+.app-header::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;background:rgba(255,255,255,.12);border-radius:50%}
+.mascot{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #fff;background:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.header-text{flex:1;position:relative;z-index:2}
+.eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:.7rem;opacity:.9;margin:0}
+.app-header h1{margin:4px 0;font-size:1.5rem}
+.subtitle{margin:0;opacity:.92;font-size:.88rem}
+.updated-badge{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:5px 12px;border-radius:999px;font-size:.74rem;font-weight:600;backdrop-filter:blur(4px)}
+.updated-badge .dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.3)}
+.header-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;position:relative;z-index:2}
+.btn{padding:8px 14px;border:none;border-radius:10px;font-size:.85rem;cursor:pointer;font-weight:600;transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.22);color:#fff;backdrop-filter:blur(4px)}
+.btn-pink{background:var(--primary);color:#fff}
+.btn-pink:hover{background:var(--primary-dark)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;margin-top:18px;box-shadow:var(--shadow)}
+.panel h2{margin:0 0 4px;font-size:1.1rem}
+.panel-sub{color:var(--muted);font-size:.85rem;margin:0 0 16px}
+.controls-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:.82rem;font-weight:600}
+.field input,.field select,.field textarea{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:.95rem;font-weight:400;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.money-input-wrap{display:flex;align-items:center;gap:6px}
+.money-input-wrap span{color:var(--muted);font-weight:600}
+.label-preview{margin-top:18px;display:flex;justify-content:center}
+.label-card{width:300px;background:#fff;border:2px solid var(--primary);border-radius:14px;padding:18px;text-align:center;color:#4a1d33;box-shadow:var(--shadow)}
+.lc-logo{font-weight:800;color:var(--primary);letter-spacing:1px;font-size:.8rem;text-transform:uppercase}
+.lc-name{font-size:1.05rem;font-weight:700;margin:10px 0 14px;min-height:44px}
+.lc-de{color:var(--muted);font-size:.85rem;text-decoration:line-through}
+.lc-por{color:var(--primary-dark);font-size:1.9rem;font-weight:800;margin-top:2px}
+.lc-note{font-size:.72rem;color:var(--muted);margin-top:10px;border-top:1px dashed var(--border);padding-top:8px}
+.print-area{display:none}
+@media print{
+body *{visibility:hidden}
+.print-area,.print-area *{visibility:visible}
+.print-area{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:absolute;left:0;top:0;width:100%;padding:10px}
+.plabel{width:100%;border:2px solid #000;border-radius:10px;padding:10px;text-align:center;page-break-inside:avoid}
+.p-logo{font-weight:800;font-size:10px;color:#000}
+.p-name{font-size:11px;font-weight:700;margin:6px 0}
+.p-de{font-size:10px;text-decoration:line-through}
+.p-por{font-size:22px;font-weight:800}
+}
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:center;gap:8px;padding:10px 16px;z-index:40;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 14px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer;text-decoration:none;transition:background .15s,color .15s}
+.nav-item:hover{background:var(--primary-light);color:var(--primary)}
+.nav-item.is-active{color:var(--primary);font-weight:600}
+.nav-item .nav-icon{font-size:1.1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app-header">
+    <img src="mascote.jpg" alt="Mascote Loja da Vivi" class="mascot">
+    <div class="header-text">
+      <p class="eyebrow">✦ Subsistema interno</p>
+      <h1>Etiquetas Promocionais</h1>
+      <p class="subtitle">Crie etiquetas de promoção para imprimir e colar nos produtos.</p>
+      <span class="updated-badge"><span class="dot"></span><span id="updated-text">Buscando última atualização...</span></span>
+      <div class="header-actions">
+        <button id="toggle-dark-mode" class="btn btn-ghost" type="button">🌙 Tema escuro</button>
+        <button id="btn-print" class="btn btn-pink" type="button">🖨️ Imprimir etiquetas</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Dados da etiqueta</h2>
+      <p class="panel-sub">Preencha as informações do produto em promoção.</p>
+      <div class="controls-grid">
+        <label class="field">Nome do produto
+          <input id="produto" placeholder="Ex: Batom Matte Vermelho">
+        </label>
+        <label class="field">Preço "De" (R$)
+          <div class="money-input-wrap"><span>R$</span><input id="precoDe" inputmode="decimal" placeholder="0,00"></div>
+        </label>
+        <label class="field">Preço "Por" (R$)
+          <div class="money-input-wrap"><span>R$</span><input id="precoPor" inputmode="decimal" placeholder="0,00"></div>
+        </label>
+        <label class="field">Quantidade de etiquetas
+          <input id="qtd" type="number" min="1" value="1">
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Prévia da etiqueta</h2>
+      <p class="panel-sub">É assim que a etiqueta vai ficar.</p>
+      <div class="label-preview">
+        <div class="label-card">
+          <div class="lc-logo">💄 Loja da Vivi</div>
+          <div class="lc-name" id="pv-nome">Nome do produto</div>
+          <div class="lc-de" id="pv-de"></div>
+          <div class="lc-por" id="pv-por">POR R$ 0,00</div>
+          <div class="lc-note">Oferta válida enquanto durar o estoque</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="print-area" id="print-area"></div>
+
+<nav class="nav-bar">
+  <a class="nav-item" href="index.html"><span class="nav-icon">🛒</span> Marketplace</a>
+  <a class="nav-item" href="caixa.html"><span class="nav-icon">💰</span> Caixa</a>
+  <a class="nav-item is-active" href="etiqueta.html"><span class="nav-icon">🏷️</span> Etiqueta</a>
+  <a class="nav-item" href="danfe.html"><span class="nav-icon">📄</span> DANFE</a>
+</nav>
+
+<script>
+(function(){var t=document.getElementById("updated-text");fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1").then(function(r){return r.json()}).then(function(d){var c=Array.isArray(d)?d[0]:null;if(!c||!c.commit)throw 0;var x=new Date(c.commit.committer.date);t.textContent="Última atualização: "+x.toLocaleDateString("pt-BR")+" às "+x.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}).catch(function(){t.textContent="Última atualização: indisponível"})})();
+var tb=document.getElementById("toggle-dark-mode");
+function applyTheme(){var d=document.documentElement.classList.toggle("dark-mode");tb.textContent=d?"☀️ Tema claro":"🌙 Tema escuro";localStorage.setItem("darkMode",d?"1":"0")}
+if(localStorage.getItem("darkMode")==="1")document.documentElement.classList.add("dark-mode");
+tb.textContent=document.documentElement.classList.contains("dark-mode")?"☀️ Tema claro":"🌙 Tema escuro";
+tb.addEventListener("click",applyTheme);
+function parseNum(v){if(typeof v==="number")return v;var s=String(v||"").trim().replace(/[^\d.,-]/g,"");if(s.includes(".")&&s.includes(","))s=s.replace(/\./g,"").replace(",",".");else if(s.includes(","))s=s.replace(",",".");return parseFloat(s)||0}
+function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function atualizarPrevia(){var nome=document.getElementById("produto").value||"Nome do produto";var de=parseNum(document.getElementById("precoDe").value);var por=parseNum(document.getElementById("precoPor").value);document.getElementById("pv-nome").textContent=nome;document.getElementById("pv-de").textContent=de>0?"De "+fmt(de):"";document.getElementById("pv-por").textContent=por>0?"POR "+fmt(por):"POR R$ 0,00"}
+document.getElementById("produto").addEventListener("input",atualizarPrevia);
+["precoDe","precoPor"].forEach(function(id){document.getElementById(id).addEventListener("input",atualizarPrevia)});
+document.getElementById("btn-print").addEventListener("click",function(){var nome=document.getElementById("produto").value||"Produto";var de=parseNum(document.getElementById("precoDe").value);var por=parseNum(document.getElementById("precoPor").value);var qtd=parseInt(document.getElementById("qtd").value)||1;if(qtd<1)qtd=1;if(qtd>99)qtd=99;var area=document.getElementById("print-area");area.innerHTML="";for(var i=0;i<qtd;i++){var d=document.createElement("div");d.className="plabel";d.innerHTML='<div class="p-logo">LOJA DA VIVI</div><div class="p-name">'+nome.replace(/</g,"&lt;")+'</div><div class="p-de">'+(de>0?"De "+fmt(de):"")+'</div><div class="p-por">'+(por>0?"POR "+fmt(por):"")+'</div>';area.appendChild(d)}window.print()});
+</script>
+</body>
+</html>
