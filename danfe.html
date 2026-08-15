@@ -11,6 +11,7 @@
 body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.5}
 .wrap{max-width:1000px;margin:0 auto;padding:24px;padding-bottom:90px}
 .app-header{background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;padding:24px 28px;color:#fff;display:flex;align-items:center;gap:18px;position:relative;overflow:hidden}
+.app-header::after{content:"";position:absolute;right:-40px;top:-40px;width:190px;height:190px;background:rgba(255,255,255,.12);border-radius:50%}
 .mascot{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #fff;background:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .header-text{flex:1;position:relative;z-index:2}
 .eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:.7rem;opacity:.9;margin:0}
@@ -96,15 +97,15 @@ body *{visibility:hidden}
     <section class="panel">
       <h2>Dados da nota</h2>
       <p class="panel-sub">Confira e ajuste os dados antes de gerar o PDF.</p>
-      <h3 class="sub-h">Emitente</h3>
+      <h3 class="sub-h">Emitente (empresas cadastradas)</h3>
       <div class="controls-grid">
-        <label class="field">Razao Social (empresas cadastradas)
+        <label class="field">Selecione a empresa
           <select id="empresa-select">
             <option value="">Selecione uma empresa cadastrada...</option>
-            <option value="Loja da Vivi Ltda|32.519.260/0001-64">Loja da Vivi Ltda - 32.519.260/0001-64</option>
-            <option value="Ferreira Prosperita Cosmeticos LTDA|47.906.429/0001-64">Ferreira Prosperita Cosmeticos LTDA - 47.906.429/0001-64</option>
-            <option value="Rav Shefa Distribuidora de Cosmeticos Ltda|22.694.612/0001-06">Rav Shefa Distribuidora de Cosmeticos Ltda - 22.694.612/0001-06</option>
-            <option value="Viviane Christina Ferreira|27.680.632/0001-08">Viviane Christina Ferreira - 27.680.632/0001-08</option>
+            <option value="Loja da Vivi Ltda">Loja da Vivi Ltda - 32.519.260/0001-64</option>
+            <option value="Ferreira Prosperita Cosmeticos LTDA">Ferreira Prosperita Cosmeticos LTDA - 47.906.429/0001-64</option>
+            <option value="Rav Shefa Distribuidora de Cosmeticos Ltda">Rav Shefa Distribuidora de Cosmeticos Ltda - 22.694.612/0001-06</option>
+            <option value="Viviane Christina Ferreira">Viviane Christina Ferreira - 27.680.632/0001-08</option>
           </select>
         </label>
       </div>
@@ -152,8 +153,8 @@ body *{visibility:hidden}
 
     <section class="panel">
       <h2>Produtos</h2>
-      <p class="panel-sub">Itens da nota importada (ou adicione manualmente).</p>
-      <div class="table-wrap" style="overflow-x:auto;">
+      <p class="panel-sub">Itens da nota importada (ou preenchidos manualmente).</p>
+      <div style="overflow-x:auto;">
         <table class="danfe-table" style="margin-bottom:0;">
           <thead><tr><th>Produto</th><th>Qtd</th><th>Valor unit.</th><th>Valor total</th></tr></thead>
           <tbody id="produtos-body"></tbody>
@@ -208,13 +209,25 @@ function esc(t){return String(t==null?"":t).replace(/</g,"&lt;").replace(/>/g,"&
 
 var produtos=[];
 
-// Empresas cadastradas: ao selecionar, preenche razao e CNPJ
+// ============================================================
+// EMPRESAS CADASTRADAS COM ENDERECO AUTOMATICO
+// ============================================================
+var EMPRESAS = {
+  "Loja da Vivi Ltda": { cnpj: "32.519.260/0001-64", end: "Rua Dr. Pedro Ferreira, 140 - Sala 09 - Centro - Itajai-SC - CEP 88301-030" },
+  "Ferreira Prosperita Cosmeticos LTDA": { cnpj: "47.906.429/0001-64", end: "Rua Dr. Pedro Ferreira, 140 - Sala 24 - Centro - Itajai-SC - CEP 88301-030" },
+  "Rav Shefa Distribuidora de Cosmeticos Ltda": { cnpj: "22.694.612/0001-06", end: "Rua Dr. Pedro Ferreira, 140 - Sala 23 - Centro - Itajai-SC - CEP 88301-030" },
+  "Viviane Christina Ferreira": { cnpj: "27.680.632/0001-08", end: "Rua Hercilio Luz, 494 - Apto 502 - Centro - Itajai-SC - CEP 88301-001" }
+};
+
+// Ao selecionar a empresa: preenche razao, CNPJ e endereco
 document.getElementById("empresa-select").addEventListener("change",function(){
-  var v=document.getElementById("empresa-select").value;
-  if(!v)return;
-  var partes=v.split("|");
-  document.getElementById("emitRazao").value=partes[0];
-  document.getElementById("emitCnpj").value=partes[1];
+  var razao=document.getElementById("empresa-select").value;
+  if(!razao)return;
+  var emp=EMPRESAS[razao];
+  if(!emp)return;
+  document.getElementById("emitRazao").value=razao;
+  document.getElementById("emitCnpj").value=emp.cnpj;
+  document.getElementById("emitEnd").value=emp.end;
   atualizarPrevia();
 });
 
@@ -231,7 +244,6 @@ function atualizarPrevia(){
   document.getElementById("d-nat").textContent=val("natureza")||"—";
   var v=parseFloat(String(val("valorTotal")).replace(/\./g,"").replace(",","."))||0;
   document.getElementById("d-valor").textContent=v>0?fmt(v):"—";
-  // Produtos
   var tb2=document.getElementById("produtos-body");
   tb2.innerHTML="";
   if(produtos.length===0){
@@ -284,16 +296,13 @@ function preencherDoXML(xml){
   var dest=infNFe.getElementsByTagName("dest")[0];
   var total=infNFe.getElementsByTagName("ICMSTot")[0];
 
-  // Chave de acesso (atributo Id do infNFe)
   var chave=infNFe.getAttribute("Id")||"";
   if(chave.indexOf("NFe")===0)chave=chave.slice(3);
   document.getElementById("d-chave").textContent=chave||"[nao encontrada no XML]";
 
-  // Protocolo
   var prot=xml.getElementsByTagName("nProt");
-  document.getElementById("d-prot").textContent=prot&&prot.length?prot[0].textContent.trim():val("d-prot")||"[sem protocolo no XML]";
+  document.getElementById("d-prot").textContent=prot&&prot.length?prot[0].textContent.trim():"[sem protocolo no XML]";
 
-  // Numero e data
   var num=tag(ide,"nNF");
   if(num)document.getElementById("numNota").value=num;
   var dh=tag(ide,"dhEmi")||tag(ide,"dEmi");
@@ -304,7 +313,6 @@ function preencherDoXML(xml){
   var nat=tag(ide,"natOp");
   if(nat)document.getElementById("natureza").value=nat;
 
-  // Emitente
   if(emit){
     var r=tag(emit,"xNome");if(r)document.getElementById("emitRazao").value=r;
     var c=tag(emit,"CNPJ");if(c)document.getElementById("emitCnpj").value=formatarCNPJ(c);
@@ -315,7 +323,6 @@ function preencherDoXML(xml){
     }
   }
 
-  // Destinatario
   if(dest){
     var dn=tag(dest,"xNome");if(dn)document.getElementById("destNome").value=dn;
     var dc=tag(dest,"CNPJ")||tag(dest,"CPF");if(dc)document.getElementById("destDoc").value=formatarCNPJ(dc);
@@ -326,11 +333,9 @@ function preencherDoXML(xml){
     }
   }
 
-  // Valor total
   var vNF=tag(total,"vNF");
   if(vNF)document.getElementById("valorTotal").value=vNF.replace(".",",");
 
-  // Produtos
   produtos=[];
   var dets=infNFe.getElementsByTagName("det");
   for(var i=0;i<dets.length;i++){
