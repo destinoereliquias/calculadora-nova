@@ -37,21 +37,33 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
 .file-name{color:var(--muted);font-size:.85rem}
 .info-msg{font-size:.85rem;color:var(--ok);margin:10px 0 0;min-height:18px}
 .info-msg.err{color:var(--danger)}
-.manual-form{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end;margin-top:12px}
+.manual-form{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-top:12px}
 .manual-form .field{margin:0}
 @media(max-width:700px){.manual-form{grid-template-columns:1fr 1fr}.manual-form .field:first-child{grid-column:1/-1}}
 .preview-grid{display:grid;gap:6px;margin-top:12px}
-.plabel{border:2px solid var(--primary);border-radius:8px;padding:8px;text-align:center;background:#fff;color:#4a1d33;page-break-inside:avoid}
+
+/* ETIQUETA: mascote a esquerda, conteudo a direita */
+.plabel{display:flex;align-items:center;gap:6px;border:2px solid var(--primary);border-radius:8px;padding:6px;text-align:left;background:#fff;color:#4a1d33;page-break-inside:avoid}
 .plabel.bw{border-color:#000;color:#000}
-.p-logo{font-weight:800;font-size:9px;letter-spacing:.5px}
-.p-name{font-size:10px;font-weight:700;margin:4px 0;min-height:24px;word-break:break-word}
-.p-de{font-size:9px;text-decoration:line-through;color:#888}
-.p-por{font-size:15px;font-weight:800;margin-top:2px}
+.plabel .p-mascote{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #ddd;background:#fff}
+.plabel .p-info{flex:1;min-width:0}
+.p-name{font-size:10px;font-weight:700;line-height:1.15;word-break:break-word;margin:0}
+.p-codigo{font-size:7px;letter-spacing:.3px;color:#555;margin:2px 0 0;font-family:monospace}
+.p-barcode{display:block;margin:1px 0;overflow:hidden}
+.p-barcode svg{display:block;max-width:100%;height:auto}
+.p-de{font-size:9px;text-decoration:line-through;color:#888;margin-top:2px}
+.p-por{font-size:14px;font-weight:800;margin-top:1px}
 @media print{
 body *{visibility:hidden}
 #print-area,#print-area *{visibility:visible}
 #print-area{display:block;position:absolute;left:0;top:0;width:210mm;padding:5mm}
 .print-ready{display:grid;gap:2mm}
+.print-ready .plabel{padding:4mm;gap:3mm}
+.print-ready .p-mascote{width:12mm;height:12mm}
+.print-ready .p-name{font-size:3.2mm}
+.print-ready .p-codigo{font-size:2.2mm}
+.print-ready .p-de{font-size:2.6mm}
+.print-ready .p-por{font-size:4.5mm}
 }
 .nav-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:center;gap:8px;padding:10px 16px;z-index:40;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 14px;border:none;border-radius:10px;background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer;text-decoration:none;transition:background .15s,color .15s}
@@ -79,7 +91,7 @@ body *{visibility:hidden}
   <main>
     <section class="panel">
       <h2>Importar planilha</h2>
-      <p class="panel-sub">Fluxo: importar arquivo, escolher modelo e imprimir. O arquivo deve ter colunas Produto, De e Por.</p>
+      <p class="panel-sub">Fluxo: importar arquivo, escolher modelo e imprimir. O arquivo deve ter colunas Produto, Codigo (opcional), De e Por.</p>
       <div class="controls-grid">
         <label class="field">Escolher arquivo (CSV / XLS / XLSX)
           <div class="file-row">
@@ -105,6 +117,9 @@ body *{visibility:hidden}
       <div class="manual-form">
         <label class="field">Nome do produto
           <input id="m-nome" placeholder="Ex: Batom Matte Vermelho">
+        </label>
+        <label class="field">Codigo (EAN/SKU)
+          <input id="m-codigo" placeholder="789...">
         </label>
         <label class="field">Preco De (R$)
           <input id="m-de" inputmode="decimal" placeholder="0,00">
@@ -150,13 +165,38 @@ function esc(t){return String(t==null?"":t).replace(/</g,"&lt;").replace(/>/g,"&
 
 var itens=[];
 
-function montarEtiqueta(it,bw){
+// Monta uma etiqueta (mascote a esquerda + nome + codigo de barras + precos)
+function montarEtiqueta(it,index,bw){
   var d=document.createElement("div");
   d.className="plabel"+(bw?" bw":"");
-  d.innerHTML='<div class="p-logo">LOJA DA VIVI</div><div class="p-name">'+esc(it.nome)+'</div>'+
-    (it.de>0?'<div class="p-de">De '+fmt(it.de)+'</div>':'')+
-    '<div class="p-por">'+(it.por>0?"POR "+fmt(it.por):"")+'</div>';
+  var codigo=it.codigo||("0000"+(index+1));
+  d.innerHTML=
+    '<img class="p-mascote" src="mascote.jpg" alt="">'+
+    '<div class="p-info">'+
+      '<div class="p-name">'+esc(it.nome)+'</div>'+
+      '<div class="p-codigo">'+esc(codigo)+'</div>'+
+      '<div class="p-barcode" data-codigo="'+esc(codigo)+'"></div>'+
+      (it.de>0?'<div class="p-de">De '+fmt(it.de)+'</div>':'')+
+      '<div class="p-por">'+(it.por>0?"POR "+fmt(it.por):"")+'</div>'+
+    '</div>';
   return d;
+}
+
+// Gera o codigo de barras em cada etiqueta (usa JsBarcode se disponivel)
+function gerarCodigos(container){
+  var els=container.querySelectorAll(".p-barcode");
+  els.forEach(function(el){
+    var valor=el.getAttribute("data-codigo")||"";
+    if(!valor)return;
+    el.innerHTML="";
+    try{
+      if(typeof JsBarcode!=="undefined"){
+        var svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+        el.appendChild(svg);
+        JsBarcode(svg,valor,{format:"CODE128",width:1,height:22,displayValue:false,margin:0});
+      }
+    }catch(e){}
+  });
 }
 
 function renderizar(){
@@ -170,7 +210,8 @@ function renderizar(){
     return;
   }
   var bw=modelo.indexOf("bw")!==-1;
-  itens.forEach(function(it){prev.appendChild(montarEtiqueta(it,bw))});
+  itens.forEach(function(it,i){prev.appendChild(montarEtiqueta(it,i,bw))});
+  gerarCodigos(prev);
 }
 
 function gerarImpressao(){
@@ -183,8 +224,9 @@ function gerarImpressao(){
   var wrap=document.createElement("div");
   wrap.className="print-ready";
   wrap.style.gridTemplateColumns="repeat("+cols+",1fr)";
-  itens.forEach(function(it){wrap.appendChild(montarEtiqueta(it,bw))});
+  itens.forEach(function(it,i){wrap.appendChild(montarEtiqueta(it,i,bw))});
   area.appendChild(wrap);
+  gerarCodigos(wrap);
 }
 
 // Importa arquivo
@@ -231,20 +273,21 @@ function processarXLSX(bytes){
 function processarLinhas(dados){
   var info=document.getElementById("info-msg");
   if(!dados.length){info.className="info-msg err";info.textContent="Arquivo vazio.";return;}
-  var inicio=0;var colN=0,colD=1,colP=2;
+  var inicio=0;var colN=0,colC=1,colD=2,colP=3;
   var prim=dados[0].map(function(c){return String(c||"").toLowerCase().trim()});
   if(prim.join(" ").search(/produto|nome|descricao|item/)!==-1){
     inicio=1;
     prim.forEach(function(c,i){
       if(/produto|nome|descricao|item/.test(c))colN=i;
-      if(/de|precode|preco.?de/.test(c))colD=i;
-      if(/por|precopor|preco.?por/.test(c))colP=i;
+      if(/codigo|ean|sku|barras/.test(c))colC=i;
+      if(/^de$|precode|preco.?de/.test(c))colD=i;
+      if(/^por$|precopor|preco.?por/.test(c))colP=i;
     });
   }
   var novos=[];
   for(var i=inicio;i<dados.length;i++){
     var r=dados[i];if(!r||!r[colN])continue;
-    novos.push({nome:String(r[colN]).trim(),de:parseNum(r[colD]),por:parseNum(r[colP])});
+    novos.push({nome:String(r[colN]).trim(),codigo:String(r[colC]!=null?r[colC]:"").trim(),de:parseNum(r[colD]),por:parseNum(r[colP])});
   }
   if(novos.length===0){info.className="info-msg err";info.textContent="Nenhum item encontrado no arquivo. Verifique as colunas.";return;}
   itens=novos;
@@ -262,6 +305,7 @@ function adicionarManual(){
     document.getElementById("m-nome").focus();
     return;
   }
+  var codigo=document.getElementById("m-codigo").value.trim();
   var de=parseNum(document.getElementById("m-de").value);
   var por=parseNum(document.getElementById("m-por").value);
   if(por<=0&&de<=0){
@@ -269,8 +313,9 @@ function adicionarManual(){
     info.textContent="Informe ao menos um preco (De ou Por).";
     return;
   }
-  itens.push({nome:nome,de:de,por:por});
+  itens.push({nome:nome,codigo:codigo,de:de,por:por});
   document.getElementById("m-nome").value="";
+  document.getElementById("m-codigo").value="";
   document.getElementById("m-de").value="";
   document.getElementById("m-por").value="";
   info.className="info-msg";
@@ -280,7 +325,7 @@ function adicionarManual(){
 }
 
 document.getElementById("btn-adicionar").addEventListener("click",adicionarManual);
-["m-nome","m-de","m-por"].forEach(function(id){
+["m-nome","m-codigo","m-de","m-por"].forEach(function(id){
   document.getElementById(id).addEventListener("keydown",function(e){
     if(e.key==="Enter"){e.preventDefault();adicionarManual();}
   });
@@ -300,6 +345,9 @@ document.getElementById("btn-limpar").addEventListener("click",function(){
 var scriptXLS=document.createElement("script");
 scriptXLS.src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
 document.head.appendChild(scriptXLS);
+var scriptBar=document.createElement("script");
+scriptBar.src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js";
+document.head.appendChild(scriptBar);
 
 renderizar();
 </script>
