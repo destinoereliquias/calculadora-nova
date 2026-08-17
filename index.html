@@ -191,7 +191,7 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
 </nav>
 
 <script>
-/* ============================================================
+/* 
    CONFIG - VALORES REAIS (fonte: planilha da calculadora antiga)
    Aliquota por CNPJ: LTDA 10% | FERREIRA 11% | RAV 10% | VIVI 4%
    PRESENCIAL: comissao 3,29% (custo da maquina de pagamento)
@@ -201,7 +201,7 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
    ML: tabela NOVA do artigo oficial (substitui taxas fixas antigas)
    Ordem das faixas de peso (fretes acima de 79):
    [ate300G, 300a500G, 500Ga1KG, 1a2KG, 2a5KG, 5a9KG, 9a13KG, 13a17KG, 17a23KG, 23a30KG]
-   ============================================================ */
+    */
 var CONFIG = {
   aliq: {
     "LOJA DA VIVI LTDA": 0.10,
@@ -226,11 +226,11 @@ var CONFIG = {
   }
 };
 
-/* ============================================================
+/* 
    TABELA NOVA DO MERCADO LIVRE (artigo oficial de vendedores)
    Colunas de preco: ate 18,99 | 19-48,99 | 49-78,99 | 79-99,99 |
    100-119,99 | 120-149,99 | 150-199,99 | 200+
-   ============================================================ */
+    */
 var ENVIO_ML = {
   faixasPreco: [
     { limite: 18.99 }, { limite: 48.99 }, { limite: 78.99 }, { limite: 99.99 },
@@ -270,9 +270,9 @@ var ENVIO_ML = {
   ]
 };
 
-/* ============================================================
+/* 
    MOTOR DE CALCULO (mesma formula da calculadora antiga)
-   ============================================================ */
+    */
 function parseNum(v) {
   if (typeof v === "number") return v;
   var s = String(v || "").trim().replace(/[^\d.,-]/g, "");
@@ -287,8 +287,8 @@ function porFaixa(obj, preco) {
     if (k.indexOf("ate") === 0) ates.push(parseFloat(k.replace("ate", "")));
   });
   ates.sort(function (a, b) { return a - b; });
-  for (var i = 0; i < ates.length; i++) {
-    if (preco <= ates[i]) return obj["ate" + ates[i]];
+  for (var i = 0; i &lt; ates.length; i++) {
+    if (preco &lt;= ates[i]) return obj["ate" + ates[i]];
   }
   return obj.acima79 != null ? obj.acima79
     : obj.acima50 != null ? obj.acima50
@@ -296,16 +296,16 @@ function porFaixa(obj, preco) {
     : obj.acima10 != null ? obj.acima10 : 0;
 }
 function indicePeso(pesoKg) {
-  for (var i = 0; i < ENVIO_ML.faixasPeso.length; i++) {
-    if (pesoKg <= ENVIO_ML.faixasPeso[i].pesoMax) return i;
+  for (var i = 0; i &lt; ENVIO_ML.faixasPeso.length; i++) {
+    if (pesoKg &lt;= ENVIO_ML.faixasPeso[i].pesoMax) return i;
   }
   return ENVIO_ML.faixasPeso.length - 1;
 }
 function custoEnvioML(pesoKg, precoProduto) {
   var linha = ENVIO_ML.faixasPeso[indicePeso(pesoKg)];
   var coluna = -1;
-  for (var i = 0; i < ENVIO_ML.faixasPreco.length; i++) {
-    if (precoProduto <= ENVIO_ML.faixasPreco[i].limite) { coluna = i; break; }
+  for (var i = 0; i &lt; ENVIO_ML.faixasPreco.length; i++) {
+    if (precoProduto &lt;= ENVIO_ML.faixasPreco[i].limite) { coluna = i; break; }
   }
   if (coluna === -1) coluna = ENVIO_ML.faixasPreco.length - 1;
   return linha.custos[coluna];
@@ -329,7 +329,7 @@ function calcularPreco(entradas) {
 
   // INSUMOS: soma ao CUSTO (despesa) - igual calculadora antiga
   if (CONFIG.usarInsumos) {
-    custo += (pesoKg <= 0.3 ? CONFIG.insumos.ate300G : CONFIG.insumos.acima300G);
+    custo += (pesoKg &lt;= 0.3 ? CONFIG.insumos.ate300G : CONFIG.insumos.acima300G);
   }
 
   var aliquota = CONFIG.aliq[cnpj] != null ? CONFIG.aliq[cnpj] : 0.10;
@@ -351,7 +351,7 @@ function calcularPreco(entradas) {
       if (typeof cfg.frete === "number") return cfg.frete;
       if (canal === "presencial") return 0;
       if (canal === "rd") return (cfg.freteACIMA[idxPeso] || 0) * cfg.comissao;
-      if (cfg.freteATE && preco <= maiorLimite(cfg.freteATE)) return porFaixa(cfg.freteATE, preco) * constNivel;
+      if (cfg.freteATE && preco &lt;= maiorLimite(cfg.freteATE)) return porFaixa(cfg.freteATE, preco) * constNivel;
       return (cfg.freteACIMA[idxPeso] || 0) * constNivel;
     }
     function taxaPara(preco) {
@@ -378,39 +378,53 @@ function calcularPreco(entradas) {
   return resultados;
 }
 
-/* ============================================================
-   SELO DE ULTIMA ATUALIZACAO (data + hora, com cache)
-   ============================================================ */
+/* 
+   SELO DE ULTIMA ATUALIZACAO (data + hora REAIS, com timeout e cache)
+   Busca o ultimo commit na API do GitHub com limite de 8 segundos.
+   Se a API demorar ou falhar, usa o ultimo valor salvo no navegador.
+   Nunca fica preso em "Buscando ultima atualizacao...".
+    */
 (function () {
   var textEl = document.getElementById("updated-text");
+  var CACHE_KEY = "ultimaAtualizacao";
+
   function mostrar(iso) {
     var d = new Date(iso);
+    if (isNaN(d.getTime())) return false;
     textEl.textContent = "Ultima atualizacao: " + d.toLocaleDateString("pt-BR") + " as " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return true;
   }
-  function cacheValido() {
+  function lerCache() {
     try {
-      var obj = JSON.parse(localStorage.getItem("ultimaAtualizacao") || "null");
-      if (obj && obj.iso && (Date.now() - obj.ts < 5 * 60 * 1000)) { mostrar(obj.iso); return true; }
+      var obj = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+      if (obj && obj.iso && mostrar(obj.iso)) return true;
     } catch (e) {}
     return false;
   }
-  if (cacheValido()) return;
-  fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1")
+
+  // Mostra na hora o ultimo valor salvo (se existir)
+  var exibiu = lerCache();
+
+  // Limite de 8s: se a API nao responder, aborta e cai no fallback
+  var controller = window.AbortController ? new AbortController() : null;
+  var timer = window.setTimeout(function () {
+    if (controller) controller.abort();
+    if (!exibiu) textEl.textContent = "Ultima atualizacao: indisponivel";
+  }, 8000);
+
+  fetch("https://api.github.com/repos/destinoereliquias/calculadora-nova/commits?per_page=1", controller ? { signal: controller.signal } : {})
     .then(function (r) { return r.json(); })
     .then(function (data) {
       var commit = Array.isArray(data) ? data[0] : null;
       if (!commit || !commit.commit) throw new Error("sem dados");
       var iso = commit.commit.committer.date;
       mostrar(iso);
-      try { localStorage.setItem("ultimaAtualizacao", JSON.stringify({ ts: Date.now(), iso: iso })); } catch (e) {}
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), iso: iso })); } catch (e) {}
     })
     .catch(function () {
-      try {
-        var obj = JSON.parse(localStorage.getItem("ultimaAtualizacao") || "null");
-        if (obj && obj.iso) { mostrar(obj.iso); return; }
-      } catch (e) {}
-      textEl.textContent = "Ultima atualizacao: indisponivel";
-    });
+      if (!exibiu) textEl.textContent = "Ultima atualizacao: indisponivel";
+    })
+    .then(function () { window.clearTimeout(timer); });
 })();
 
 var themeBtn = document.getElementById("toggle-dark-mode");
@@ -483,12 +497,12 @@ function calcular() {
     var PctLiq = parseNum(document.getElementById("PctLiq").value);
 
     if (cnpj === "Selecione") { fb.dataset.state = "error"; fb.textContent = "Selecione o CNPJ para iniciar."; return; }
-    if (pesoKg <= 0) { fb.dataset.state = "error"; fb.textContent = "Selecione a faixa de peso do produto."; return; }
+    if (pesoKg &lt;= 0) { fb.dataset.state = "error"; fb.textContent = "Selecione a faixa de peso do produto."; return; }
     if (!(custo > 0)) { fb.dataset.state = "error"; fb.textContent = "Informe um custo maior que zero."; return; }
     if (!(Manual > 0 || ValorLiq > 0 || PctLiq > 0)) { fb.dataset.state = "error"; fb.textContent = "Preencha ao menos um modo de calculo."; return; }
 
     // Custo total com insumo (para as porcentagens - igual antiga)
-    var custoTotal = custo + (CONFIG.usarInsumos ? (pesoKg <= 0.3 ? CONFIG.insumos.ate300G : CONFIG.insumos.acima300G) : 0);
+    var custoTotal = custo + (CONFIG.usarInsumos ? (pesoKg &lt;= 0.3 ? CONFIG.insumos.ate300G : CONFIG.insumos.acima300G) : 0);
 
     var linhas = document.getElementById("result-body").children;
     LINHAS.forEach(function (l, i) {
