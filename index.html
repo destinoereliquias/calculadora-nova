@@ -63,12 +63,12 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
   <header class="app-header">
     <img src="mascote.jpg" alt="Mascote" class="mascot">
     <div class="header-text">
-      <p class="eyebrow">✦ Subsistema interno</p>
+      <p class="eyebrow">Subsistema interno</p>
       <h1>Calculadora da Loja da Vivi</h1>
       <p class="subtitle">Precos consistentes para todos os marketplaces.</p>
-      <span class="updated-badge"><span class="dot"></span><span>Atualizacao 140</span></span>
+      <span class="updated-badge"><span class="dot"></span><span>Atualizacao 141</span></span>
       <div class="header-actions">
-        <button id="clear-calculation" class="btn btn-ghost" type="button" onclick="limpar()">Limpar calculo</button>
+        <button class="btn btn-ghost" type="button" onclick="limpar()">Limpar calculo</button>
       </div>
     </div>
   </header>
@@ -107,8 +107,11 @@ body{font-family:"Segoe UI",system-ui,sans-serif;margin:0;background:var(--bg);c
         </label>
         <label class="field">Nivel
           <select id="nivel" onchange="calcular();">
-            <option value="5">5</option><option value="4">4</option>
-            <option value="3">3</option><option value="2">2</option><option value="1">1</option>
+            <option value="5">5</option>
+            <option value="4">4</option>
+            <option value="3">3</option>
+            <option value="2">2</option>
+            <option value="1">1</option>
           </select>
         </label>
       </div>
@@ -210,7 +213,7 @@ var CONFIG = {
 var ENVIO_ML = {
   faixasPreco: [
     { limite: 18.99 }, { limite: 48.99 }, { limite: 78.99 }, { limite: 99.99 },
-    { limite: 119.99 }, { limite: 149.99 }, { limite: 199.99 }, { limite: Infinity }
+    { limite: 119.99 }, { limite: 149.99 }, { limite: 199.99 }, { limite: 999999 }
   ],
   faixasPeso: [
     { pesoMax: 0.3,  custos: [5.65, 6.85, 8.15, 12.95, 14.95, 16.95, 19.05, 21.65] },
@@ -242,7 +245,7 @@ var ENVIO_ML = {
     { pesoMax: 100,  custos: [8.45, 12.65, 13.85, 107.45, 124.85, 140.45, 156.45, 168.85] },
     { pesoMax: 125,  custos: [8.55, 12.85, 14.05, 120.15, 138.95, 156.95, 174.85, 188.85] },
     { pesoMax: 150,  custos: [8.65, 12.85, 14.25, 127.45, 147.05, 166.55, 185.55, 200.35] },
-    { pesoMax: Infinity, custos: [8.75, 12.85, 14.45, 167.05, 193.35, 218.45, 243.45, 262.85] }
+    { pesoMax: 999999, custos: [8.75, 12.85, 14.45, 167.05, 193.35, 218.45, 243.45, 262.85] }
   ]
 };
 var PESOS_ANTIGOS = [0.3, 0.5, 1, 2, 5, 9, 13, 17, 23, 30];
@@ -360,19 +363,20 @@ function calcularPreco(entradas) {
   return resultados;
 }
 var LINHAS = [
-  ["presencial", "PRESENCIAL", "classico", "presencial"],
-  ["amazon", "AMAZON", "classico", "amazon"],
-  ["casasBahia", "CASAS BAHIA", "classico", "casasBahia"],
-  ["magalu", "MAGALU", "classico", "magalu"],
-  ["mercadoLivre", "MERCADO LIVRE CLASSICO", "classico", "ml-classico"],
-  ["mercadoLivre", "MERCADO LIVRE PREMIUM", "premium", "ml-premium"],
-  ["olist", "OLIST", "classico", "olist"],
-  ["rd", "RD", "classico", "rd"],
-  ["shein", "SHEIN", "classico", "shein"],
-  ["shopee", "SHOPEE", "classico", "shopee"],
-  ["temu", "TEMU", "classico", "temu"],
-  ["tiktok", "TIKTOK", "classico", "tiktok"]
+  ["presencial", "presencial"],
+  ["amazon", "amazon"],
+  ["casasBahia", "casasBahia"],
+  ["magalu", "magalu"],
+  ["mercadoLivre", "ml-classico"],
+  ["mercadoLivre", "ml-premium"],
+  ["olist", "olist"],
+  ["rd", "rd"],
+  ["shein", "shein"],
+  ["shopee", "shopee"],
+  ["temu", "temu"],
+  ["tiktok", "tiktok"]
 ];
+var PLANOS = ["classico", "premium", "classico", "classico", "classico", "premium", "classico", "classico", "classico", "classico", "classico", "classico"];
 function fmt(v) { return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
 function fmtPct(v) { return v.toFixed(2).replace(".", ",") + "%"; }
 function atualizarPills() {
@@ -406,10 +410,10 @@ function calcular() {
   if (!(custo > 0)) { fb.textContent = "Informe um custo maior que zero."; return; }
   if (!(Manual > 0 || ValorLiq > 0 || PctLiq > 0)) { fb.textContent = "Preencha ao menos um modo de calculo."; return; }
   var custoTotal = custo + (CONFIG.usarInsumos ? (pesoKg <= 0.3 ? CONFIG.insumos.ate300G : CONFIG.insumos.acima300G) : 0);
-  LINHAS.forEach(function (l) {
-    var res = calcularPreco({ custo: custo, cnpj: cnpj, nivel: nivel, pesoKg: pesoKg, plano: l[2], valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq });
-    var r = res[l[0]];
-    var id = l[3];
+  for (var i = 0; i < LINHAS.length; i++) {
+    var res = calcularPreco({ custo: custo, cnpj: cnpj, nivel: nivel, pesoKg: pesoKg, plano: PLANOS[i], valorManual: Manual, valorLiq: ValorLiq, pctLiq: PctLiq });
+    var r = res[LINHAS[i][0]];
+    var id = LINHAS[i][1];
     if (Manual > 0) {
       var pct1 = custoTotal > 0 ? (r.manual / custoTotal * 100) : 0;
       document.getElementById("m-" + id).textContent = fmt(r.manual) + " (" + fmtPct(pct1) + ")";
@@ -422,19 +426,20 @@ function calcular() {
       var lucro = custoTotal * PctLiq / 100;
       document.getElementById("p-" + id).textContent = fmt(r.pct) + " (" + fmt(lucro) + ")";
     } else { document.getElementById("p-" + id).textContent = "-"; }
-  });
+  }
   fb.textContent = "Calculo pronto. Resultados atualizados automaticamente.";
 }
 function limpar() {
-  ["custo", "Manual", "ValorLiq", "PctLiq"].forEach(function (id) { document.getElementById(id).value = ""; });
+  var ids = ["custo", "Manual", "ValorLiq", "PctLiq"];
+  for (var i = 0; i < ids.length; i++) { document.getElementById(ids[i]).value = ""; }
   document.getElementById("cnpj").value = "Selecione";
   document.getElementById("peso").value = "Selecione";
   document.getElementById("nivel").value = "5";
-  LINHAS.forEach(function (l) {
-    document.getElementById("m-" + l[3]).textContent = "-";
-    document.getElementById("v-" + l[3]).textContent = "-";
-    document.getElementById("p-" + l[3]).textContent = "-";
-  });
+  for (var j = 0; j < LINHAS.length; j++) {
+    document.getElementById("m-" + LINHAS[j][1]).textContent = "-";
+    document.getElementById("v-" + LINHAS[j][1]).textContent = "-";
+    document.getElementById("p-" + LINHAS[j][1]).textContent = "-";
+  }
   atualizarPills();
   atualizarAliquota();
   document.getElementById("calc-feedback").textContent = "Campos limpos. Preencha novamente para calcular.";
